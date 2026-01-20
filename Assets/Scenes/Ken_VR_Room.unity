@@ -3766,7 +3766,7 @@ MonoBehaviour:
   m_Colliders:
   - {fileID: 1221627815}
   m_InteractionLayers:
-    m_Bits: 1
+    m_Bits: 4
   m_DistanceCalculationMode: 1
   m_SelectMode: 0
   m_FocusMode: 1
@@ -3895,6 +3895,7 @@ MonoBehaviour:
   bowStringRenderer: {fileID: 1370891496}
   interactable: {fileID: 2066078657}
   midPointGrabObject: {fileID: 2066078656}
+  bowStringStretchLimit: 0.3
 --- !u!114 &1269121974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5824,7 +5825,7 @@ MonoBehaviour:
   m_InteractionManager: {fileID: 0}
   m_Colliders: []
   m_InteractionLayers:
-    m_Bits: 1
+    m_Bits: 8
   m_DistanceCalculationMode: 1
   m_SelectMode: 0
   m_FocusMode: 1
@@ -7200,7 +7201,7 @@ GameObject:
   - component: {fileID: 8955975564100313071}
   - component: {fileID: 8955975564100313072}
   m_Layer: 0
-  m_Name: L_Teleport Interactor
+  m_Name: L_Ray Interactor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7431,7 +7432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 130009822}
   m_InteractionLayers:
-    m_Bits: 4294967295
+    m_Bits: 3221225483
   m_Handedness: 2
   m_AttachTransform: {fileID: 0}
   m_KeepSelectedTargetValid: 1
@@ -7955,7 +7956,7 @@ GameObject:
   - component: {fileID: 7947818466574211523}
   - component: {fileID: 7947818466574211524}
   m_Layer: 0
-  m_Name: R_Teleport Interactor
+  m_Name: R_Ray Interactor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8460,7 +8461,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 130009822}
   m_InteractionLayers:
-    m_Bits: 4294967295
+    m_Bits: 3221225479
   m_Handedness: 1
   m_AttachTransform: {fileID: 0}
   m_KeepSelectedTargetValid: 1

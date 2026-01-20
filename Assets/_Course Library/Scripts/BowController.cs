@@ -13,6 +13,7 @@ public class BowController : MonoBehaviour
     [SerializeField]
     private Transform midPointGrabObject;
 
+
     private Transform interactor;
 
     private void Awake()
@@ -55,3 +56,4 @@ public class BowController : MonoBehaviour
         }
     }
 }
+
