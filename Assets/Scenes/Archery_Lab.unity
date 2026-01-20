@@ -1305,7 +1305,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 204251999}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: End2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1336,7 +1336,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 284963499}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: End1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1882,7 +1882,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 644795754}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: MidPointParent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1905,6 +1905,37 @@ Transform:
   - {fileID: 2066078656}
   - {fileID: 1006161398}
   m_Father: {fileID: 1221627814}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &659501901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 659501902}
+  m_Layer: 3
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &659501902
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 659501901}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.5384, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1818559895}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &662047477
 GameObject:
@@ -2602,7 +2633,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 941502258}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Attach
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2636,7 +2667,7 @@ GameObject:
   - component: {fileID: 1006161400}
   - component: {fileID: 1006161399}
   - component: {fileID: 1006161401}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: midPointVisualObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3143,7 +3174,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1123489863}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: BowEndPoints
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3786,6 +3817,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bow_Evil_FBX
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 5a876abf66661b746b9d65d62e883c9f, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -4064,6 +4099,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArrowController
   midPointVisual: {fileID: 1006161397}
+  arrowPrefab: {fileID: 6726587074533708524, guid: 6850c6ad5c870e34fb40ad5f7af67306, type: 3}
+  arrowSpawnPoint: {fileID: 0}
+  arrowMaxSpeed: 10
 --- !u!114 &1269121974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4661,7 +4699,7 @@ GameObject:
   - component: {fileID: 1370891494}
   - component: {fileID: 1370891495}
   - component: {fileID: 1370891496}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: BowStringVisualisation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5856,6 +5894,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Arrow
       objectReference: {fileID: 0}
+    - target: {fileID: 2410271734309294575, guid: ae75179165c8e854fa9af578948a1009, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 2638678694783495515, guid: ae75179165c8e854fa9af578948a1009, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -5918,7 +5960,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3042412393605614421, guid: ae75179165c8e854fa9af578948a1009, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 659501902}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ae75179165c8e854fa9af578948a1009, type: 3}
 --- !u!4 &1818559895 stripped
@@ -6001,7 +6046,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1960499267}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Attach
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6037,7 +6082,7 @@ GameObject:
   - component: {fileID: 2066078659}
   - component: {fileID: 2066078658}
   - component: {fileID: 2066078657}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: MidPointGrabObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
