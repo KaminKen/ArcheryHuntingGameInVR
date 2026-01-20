@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 // using System.Numerics;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class BowController : MonoBehaviour
@@ -15,9 +16,12 @@ public class BowController : MonoBehaviour
     private Transform midPointGrabObject, midPointVisualObject, midPointParent;
 
     [SerializeField]
-    private float bowStringStretchLimit = 0.3f;
+    private float bowStringStretchLimit = 0.4f;
 
     private float strength;
+
+    public UnityEvent OnBowPulled;
+    public UnityEvent<float> OnBowReleased;
 
     private Transform interactor;
 
@@ -44,10 +48,14 @@ public class BowController : MonoBehaviour
     private void PrepareBowString(SelectEnterEventArgs args)
     {
         interactor = args.interactorObject.transform;
+        OnBowPulled?.Invoke();
     }
 
     private void ResetBowString(SelectExitEventArgs args)
     {
+        OnBowReleased?.Invoke(strength);
+        strength = 0;
+
         interactor = null;
         midPointGrabObject.localPosition = Vector3.zero;
         midPointVisualObject.localPosition = Vector3.zero;
@@ -72,6 +80,7 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x < 0 && midPointLocalXAbs < bowStringStretchLimit)
         {
+            strength = Remap(midPointLocalXAbs, 0, bowStringStretchLimit,0 , 1);
             midPointVisualObject.localPosition = new Vector3(midPointLocalSpace.x,0,0);
         }
     }
@@ -80,6 +89,7 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x < 0 && midPointLocalXAbs >= bowStringStretchLimit)
         {
+            strength = 1;
             midPointVisualObject.localPosition = new Vector3(-bowStringStretchLimit,0,0);
         }
     }
@@ -88,7 +98,13 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x >= 0)
         {
+            strength = 0;
             midPointVisualObject.localPosition = Vector3.zero;
         }
+    }
+
+    private float Remap(float value, int fromMin, float fromMax, int toMin, int toMax)
+    {
+        return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
     }
 }
