@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+// using System.Numerics;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -11,8 +12,12 @@ public class BowController : MonoBehaviour
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable interactable;
 
     [SerializeField]
-    private Transform midPointGrabObject;
+    private Transform midPointGrabObject, midPointVisualObject, midPointParent;
 
+    [SerializeField]
+    private float bowStringStretchLimit = 0.3f;
+
+    private float strength;
 
     private Transform interactor;
 
@@ -45,6 +50,7 @@ public class BowController : MonoBehaviour
     {
         interactor = null;
         midPointGrabObject.localPosition = Vector3.zero;
+        midPointVisualObject.localPosition = Vector3.zero;
         bowStringRenderer.CreateString(null);
     }
 
@@ -52,8 +58,37 @@ public class BowController : MonoBehaviour
     {
         if (interactor != null)
         {
-            bowStringRenderer.CreateString(midPointGrabObject.position);
+            Vector3 midPointLocalSpace = midPointParent.InverseTransformPoint(midPointGrabObject.position);
+            float midPointLocalXAbs = Mathf.Abs(midPointLocalSpace.x);
+            HandleStringPushedBackToStart(midPointLocalSpace);
+            HandleStringPulledBackToLimit(midPointLocalXAbs, midPointLocalSpace);
+            HandlePullingString(midPointLocalXAbs, midPointLocalSpace);
+
+            bowStringRenderer.CreateString(midPointVisualObject.position);
+        }
+    }
+
+    private void HandlePullingString(float midPointLocalXAbs, Vector3 midPointLocalSpace)
+    {
+        if(midPointLocalSpace.x < 0 && midPointLocalXAbs < bowStringStretchLimit)
+        {
+            midPointVisualObject.localPosition = new Vector3(midPointLocalSpace.x,0,0);
+        }
+    }
+
+    private void HandleStringPulledBackToLimit(float midPointLocalXAbs, Vector3 midPointLocalSpace)
+    {
+        if(midPointLocalSpace.x < 0 && midPointLocalXAbs >= bowStringStretchLimit)
+        {
+            midPointVisualObject.localPosition = new Vector3(-bowStringStretchLimit,0,0);
+        }
+    }
+
+    private void HandleStringPushedBackToStart(Vector3 midPointLocalSpace)
+    {
+        if(midPointLocalSpace.x >= 0)
+        {
+            midPointVisualObject.localPosition = Vector3.zero;
         }
     }
 }
-

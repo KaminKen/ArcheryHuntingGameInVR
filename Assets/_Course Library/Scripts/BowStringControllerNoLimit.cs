@@ -1,5 +1,4 @@
 // using System.Collections.Generic;
-// // using System.Numerics;
 // using UnityEngine;
 // using UnityEngine.XR.Interaction.Toolkit;
 
@@ -12,10 +11,8 @@
 //     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable interactable;
 
 //     [SerializeField]
-//     private Transform midPointGrabObject, midPointVisualObject, midPointParent;
+//     private Transform midPointGrabObject;
 
-//     [SerializeField]
-//     private float bowStringStretchLimit = 0.3f;
 
 //     private Transform interactor;
 
@@ -48,44 +45,14 @@
 //     {
 //         interactor = null;
 //         midPointGrabObject.localPosition = Vector3.zero;
-//         midPointVisualObject.localPosition = Vector3.zero;
 //         bowStringRenderer.CreateString(null);
 //     }
+
 //     private void Update()
 //     {
 //         if (interactor != null)
 //         {
-//             Vector3 midPointLocalSpace = midPointParent.InverseTransformPoint(midPointGrabObject.position);
-//             float midPointLocalZAbs = Mathf.Abs(midPointLocalSpace.z);
-//             HandleStringPushedBackToStart(midPointLocalSpace);
-//             HandleStringPulledBackToLimit(midPointLocalZAbs, midPointLocalSpace);
-//             HandlePullingString(midPointLocalZAbs, midPointLocalSpace);
-
 //             bowStringRenderer.CreateString(midPointGrabObject.position);
-//         }
-//     }
-
-//     private void HandlePullingString(float midPointLocalZAbs, Vector3 midPointLocalSpace)
-//     {
-//         if(midPointLocalSpace.z < 0 && midPointLocalZAbs < bowStringStretchLimit)
-//         {
-//             midPointVisualObject.localPosition = new Vector3(0,0,midPointLocalSpace.z);
-//         }
-//     }
-
-//     private void HandleStringPulledBackToLimit(float midPointLocalZAbs, Vector3 midPointLocalSpace)
-//     {
-//         if(midPointLocalSpace.z < 0 && midPointLocalZAbs >= bowStringStretchLimit)
-//         {
-//             midPointVisualObject.localPosition = new Vector3(0,0,-bowStringStretchLimit);
-//         }
-//     }
-
-//     private void HandleStringPushedBackToStart(Vector3 midPointLocalSpace)
-//     {
-//         if(midPointLocalSpace.z >= 0)
-//         {
-//             midPointVisualObject.localPosition = Vector3.zero;
 //         }
 //     }
 // }
