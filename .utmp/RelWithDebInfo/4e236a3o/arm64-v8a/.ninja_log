@@ -1,0 +1,12 @@
+# ninja log v5
+55	362	7906878882465021	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	2133f51377eaff0
+363	556	7906878884261070	D:/GitHub/ArcheryHuntingGameInVR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4e236a3o/obj/arm64-v8a/libswappywrapper.so	f4f43c92f1f06f84
+26	1337	7906878892147485	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	772f6cab5aad1b1a
+20	1343	7906878892147485	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	60c6cf8c4f7ee73f
+7	1363	7906878892429899	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	c5bcd3e0b6eda48c
+39	1383	7906878892622560	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	12a854f97fd57f8
+13	1431	7906878893075900	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	e54f41e4b276ea8b
+32	1575	7906878894565959	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	dd027b1ea30d73f
+47	1591	7906878894712713	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	167e03dc7020b084
+0	1672	7906878895511698	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	c8584c806b7ce7ff
+1672	1762	7906878896432999	D:/GitHub/ArcheryHuntingGameInVR/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/4e236a3o/obj/arm64-v8a/libgame.so	32cd6dabae4d5e7b

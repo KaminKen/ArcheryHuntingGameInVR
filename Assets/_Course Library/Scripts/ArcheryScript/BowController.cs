@@ -98,13 +98,13 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x >= 0)
         {
-            strength = 0;
+            strength = 0.01f;
             midPointVisualObject.localPosition = Vector3.zero;
         }
     }
 
     private float Remap(float value, int fromMin, float fromMax, int toMin, int toMax)
     {
-        return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
+        return (((value - fromMin) / (fromMax - fromMin)) * (toMax - toMin)) + toMin;
     }
 }
