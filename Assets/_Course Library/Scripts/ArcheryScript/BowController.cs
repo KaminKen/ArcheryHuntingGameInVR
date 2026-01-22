@@ -1,4 +1,6 @@
-using System.Collections.Generic;
+// using System.Collections.Generic;
+// using System.Reflection.Metadata;
+
 // using System.Numerics;
 using UnityEngine;
 using UnityEngine.Events;
@@ -16,34 +18,66 @@ public class BowController : MonoBehaviour
     private Transform midPointGrabObject, midPointVisualObject, midPointParent;
 
     [SerializeField]
-    private float bowStringStretchLimit = 0.4f;
+    private float bowStringStretchLimit = 0.3f;
 
-    private float strength;
+    private float strength, previousStrength;
+
+    [SerializeField]
+    private float stringSoundThreshold = 0.001f;
+
+    [SerializeField]
+    private AudioSource audioSource;
 
     public UnityEvent OnBowPulled;
     public UnityEvent<float> OnBowReleased;
 
     private Transform interactor;
 
+    // private void Awake()
+    // {
+    //     if (interactable == null)
+    //     {
+    //         Debug.LogError("XRGrabInteractable not assigned!");
+    //     }
+    // }
+
+    // private void OnEnable()
+    // {
+    //     if (!interactable) return;
+    //     interactable.selectEntered.AddListener(PrepareBowString);
+    //     interactable.selectExited.AddListener(ResetBowString);
+    // }
+
+    // private void OnDisable()
+    // {
+    //     if (!interactable) return;
+    //     interactable.selectEntered.RemoveListener(PrepareBowString);
+    //     interactable.selectExited.RemoveListener(ResetBowString);
+    // }
     private void Awake()
     {
-        if (interactable == null)
-        {
-            Debug.LogError("XRGrabInteractable not assigned!");
-        }
+        if (!interactable) Debug.LogError("interactable missing", this);
+        if (!audioSource) Debug.LogError("audioSource missing", this);
+        if (!bowStringRenderer) Debug.LogError("bowStringRenderer missing", this);
+        if (!midPointGrabObject || !midPointVisualObject || !midPointParent)
+            Debug.LogError("midpoints missing", this);
     }
 
     private void OnEnable()
     {
+        if (!interactable) return;
         interactable.selectEntered.AddListener(PrepareBowString);
         interactable.selectExited.AddListener(ResetBowString);
     }
 
     private void OnDisable()
     {
+        if (!interactable) return;
         interactable.selectEntered.RemoveListener(PrepareBowString);
         interactable.selectExited.RemoveListener(ResetBowString);
     }
+
+
 
     private void PrepareBowString(SelectEnterEventArgs args)
     {
@@ -55,6 +89,9 @@ public class BowController : MonoBehaviour
     {
         OnBowReleased?.Invoke(strength);
         strength = 0;
+        previousStrength = 0;
+        audioSource.pitch = 1;
+        audioSource.Stop();
 
         interactor = null;
         midPointGrabObject.localPosition = Vector3.zero;
@@ -68,6 +105,9 @@ public class BowController : MonoBehaviour
         {
             Vector3 midPointLocalSpace = midPointParent.InverseTransformPoint(midPointGrabObject.position);
             float midPointLocalXAbs = Mathf.Abs(midPointLocalSpace.x);
+            
+            previousStrength = strength;
+
             HandleStringPushedBackToStart(midPointLocalSpace);
             HandleStringPulledBackToLimit(midPointLocalXAbs, midPointLocalSpace);
             HandlePullingString(midPointLocalXAbs, midPointLocalSpace);
@@ -80,8 +120,35 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x < 0 && midPointLocalXAbs < bowStringStretchLimit)
         {
-            strength = Remap(midPointLocalXAbs, 0, bowStringStretchLimit,0 , 1);
+            if(audioSource.isPlaying == false && strength <= 0.01f)
+            {
+                audioSource.Play();
+            }
+            strength = Remap(midPointLocalXAbs, 0f, bowStringStretchLimit, 0f, 1f);
+
             midPointVisualObject.localPosition = new Vector3(midPointLocalSpace.x,0,0);
+
+            PlayStringPullingSound();
+        }
+    }
+
+    private void PlayStringPullingSound()
+    {
+        if(Mathf.Abs(strength - previousStrength) > stringSoundThreshold)
+        {
+            if(strength < previousStrength)
+            {
+                audioSource.pitch = -1;
+            } 
+            else
+            {
+                audioSource.pitch = 1;  
+            }
+            audioSource.UnPause();
+        }
+        else
+        {
+            audioSource.Pause();
         }
     }
 
@@ -89,6 +156,7 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x < 0 && midPointLocalXAbs >= bowStringStretchLimit)
         {
+            audioSource.Pause();
             strength = 1;
             midPointVisualObject.localPosition = new Vector3(-bowStringStretchLimit,0,0);
         }
@@ -98,12 +166,14 @@ public class BowController : MonoBehaviour
     {
         if(midPointLocalSpace.x >= 0)
         {
-            strength = 0.01f;
+            audioSource.pitch = 1;
+            audioSource.Stop();
+            strength = 0;
             midPointVisualObject.localPosition = Vector3.zero;
         }
     }
 
-    private float Remap(float value, int fromMin, float fromMax, int toMin, int toMax)
+    private float Remap(float value, float fromMin, float fromMax, float toMin, float toMax)
     {
         return (((value - fromMin) / (fromMax - fromMin)) * (toMax - toMin)) + toMin;
     }
