@@ -855,7 +855,6 @@ GameObject:
   - component: {fileID: 4493361763495068922}
   - component: {fileID: 7948996240251387311}
   - component: {fileID: 7396102063156094489}
-  - component: {fileID: 1028681405476662315}
   m_Layer: 3
   m_Name: midPointVisualObject
   m_TagString: Untagged
@@ -936,33 +935,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!54 &1028681405476662315
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6666535849065765697}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 112
-  m_CollisionDetection: 0
 --- !u!1 &6870434316490410646
 GameObject:
   m_ObjectHideFlags: 0
@@ -1416,6 +1388,8 @@ MonoBehaviour:
   arrowSpawnPoint: {fileID: 7584683749561478227}
   arrowMaxSpeed: 10
   bowReleaseAudioSource: {fileID: 7680441434356428210}
+  enableDebugLogs: 1
+  logArrowHierarchy: 1
 --- !u!4 &3011051024008021030 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5a876abf66661b746b9d65d62e883c9f, type: 3}
