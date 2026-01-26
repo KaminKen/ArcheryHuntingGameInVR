@@ -7,6 +7,9 @@ public class MonsterSpawner : MonoBehaviour
     [Header("Camp Settings")]
     [Tooltip("The camp position that monsters will move towards")]
     public Transform campCenter;
+    
+    [Tooltip("Safety radius around camp - monsters will attack and self-destruct when entering this area")]
+    public float campSafetyRadius = 2f;
 
     [Header("Spawn Area Settings")]
     [Tooltip("Outer radius of the spawn area")]
@@ -169,11 +172,12 @@ public class MonsterSpawner : MonoBehaviour
             monster.transform.SetParent(monstersParent);
         }
 
-        // Try to pass camp center to monster (if it has a compatible script)
+        // Try to pass camp center and safety radius to monster (if it has a compatible script)
         MonsterBase monsterScript = monster.GetComponent<MonsterBase>();
         if (monsterScript != null)
         {
             monsterScript.SetTarget(campCenter);
+            monsterScript.SetSafetyRadius(campSafetyRadius);
         }
 
         // Track the monster
@@ -264,6 +268,10 @@ public class MonsterSpawner : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(campCenter.position, 0.5f); // Camp center marker
 
+        // Draw camp safety radius (GREEN)
+        Gizmos.color = Color.green;
+        DrawCircle(campCenter.position, campSafetyRadius, 50);
+
         // Draw outer circle arc
         Gizmos.color = Color.red;
         int segments = 50;
@@ -311,6 +319,25 @@ public class MonsterSpawner : MonoBehaviour
             campCenter.position + new Vector3(Mathf.Cos(endAngle), 0, Mathf.Sin(endAngle)) * minSpawnRadius,
             campCenter.position + new Vector3(Mathf.Cos(endAngle), 0, Mathf.Sin(endAngle)) * spawnRadius
         );
+    }
+
+    /// <summary>
+    /// Helper method to draw a full circle
+    /// </summary>
+    private void DrawCircle(Vector3 center, float radius, int segments)
+    {
+        float angleStep = 360f / segments;
+        
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = (angleStep * i) * Mathf.Deg2Rad;
+            float angle2 = (angleStep * (i + 1)) * Mathf.Deg2Rad;
+            
+            Vector3 point1 = center + new Vector3(Mathf.Cos(angle1), 0, Mathf.Sin(angle1)) * radius;
+            Vector3 point2 = center + new Vector3(Mathf.Cos(angle2), 0, Mathf.Sin(angle2)) * radius;
+            
+            Gizmos.DrawLine(point1, point2);
+        }
     }
 }
 
