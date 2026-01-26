@@ -23,18 +23,15 @@ public class MonsterBase : MonoBehaviour
     [Tooltip("Damage dealt to camp when reaching it")]
     public float attackDamage = 10f;
     
-    [Tooltip("Attack range - distance at which monster stops and attacks")]
-    public float attackRange = 1.5f;
-    
-    [Tooltip("Time between attacks")]
-    public float attackCooldown = 2f;
-    
     [Header("Animation Settings")]
     [Tooltip("Reference to the Animator component")]
     public Animator animator;
     
     [Tooltip("Duration of spawn animation (monster won't move during this time)")]
     public float spawnDuration = 1f;
+    
+    [Tooltip("Time to wait before destroying monster after attack (for death animation)")]
+    public float destroyDelay = 5f;
 
     // Animation parameter names
     protected const string ANIM_SPAWN = "Spawn";
@@ -44,9 +41,9 @@ public class MonsterBase : MonoBehaviour
 
     protected bool isAlive = true;
     protected bool isSpawning = true;
-    protected bool isAttacking = false;
+    protected bool hasAttacked = false;
     protected float spawnTimer = 0f;
-    protected float attackTimer = 0f;
+    protected float safetyRadius = 2f; // Will be set by spawner
 
     protected virtual void Start()
     {
@@ -67,7 +64,7 @@ public class MonsterBase : MonoBehaviour
 
     protected virtual void Update()
     {
-        if (!isAlive || target == null) return;
+        if (!isAlive || target == null || hasAttacked) return;
 
         // Handle spawn phase
         if (isSpawning)
@@ -84,15 +81,14 @@ public class MonsterBase : MonoBehaviour
         // Check distance to target
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
-        // Handle attack behavior
-        if (distanceToTarget <= attackRange)
+        // Check if monster entered safety radius
+        if (distanceToTarget <= safetyRadius)
         {
-            HandleAttack();
+            PerformFinalAttack();
         }
         else
         {
             // Move towards target
-            isAttacking = false;
             MoveTowardsTarget();
         }
     }
@@ -104,6 +100,15 @@ public class MonsterBase : MonoBehaviour
     public virtual void SetTarget(Transform newTarget)
     {
         target = newTarget;
+    }
+
+    /// <summary>
+    /// Set the safety radius from MonsterSpawner
+    /// Called by MonsterSpawner
+    /// </summary>
+    public virtual void SetSafetyRadius(float radius)
+    {
+        safetyRadius = radius;
     }
 
     /// <summary>
@@ -159,10 +164,14 @@ public class MonsterBase : MonoBehaviour
     }
 
     /// <summary>
-    /// Handle attack behavior when near target
+    /// Perform final attack when entering safety radius
     /// </summary>
-    protected virtual void HandleAttack()
+    protected virtual void PerformFinalAttack()
     {
+        if (hasAttacked) return;
+        
+        hasAttacked = true;
+
         // Stop walking
         if (animator != null)
         {
@@ -175,23 +184,10 @@ public class MonsterBase : MonoBehaviour
         if (directionToTarget != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            transform.rotation = targetRotation;
         }
 
-        // Attack cooldown
-        attackTimer += Time.deltaTime;
-        if (attackTimer >= attackCooldown)
-        {
-            PerformAttack();
-            attackTimer = 0f;
-        }
-    }
-
-    /// <summary>
-    /// Execute attack
-    /// </summary>
-    protected virtual void PerformAttack()
-    {
+        // Trigger attack animation
         if (animator != null)
         {
             animator.SetTrigger(ANIM_ATTACK);
@@ -199,6 +195,9 @@ public class MonsterBase : MonoBehaviour
 
         // Deal damage to camp
         DealDamageToCamp();
+
+        // Destroy monster after delay (for animation to complete)
+        Destroy(gameObject, destroyDelay);
     }
 
     /// <summary>
@@ -206,7 +205,8 @@ public class MonsterBase : MonoBehaviour
     /// </summary>
     protected virtual void DealDamageToCamp()
     {
-        return;
+        // TODO: Implement camp damage logic
+        Debug.Log($"{gameObject.name} dealt {attackDamage} damage to camp!");
     }
 
     /// <summary>
@@ -252,9 +252,12 @@ public class MonsterBase : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // Visualize attack range
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        // Visualize safety radius (in red)
+        if (target != null)
+        {
+            Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
+            Gizmos.DrawWireSphere(target.position, safetyRadius);
+        }
 
         // Visualize target line
         if (target != null && isAlive)
