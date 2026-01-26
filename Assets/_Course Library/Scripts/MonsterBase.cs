@@ -4,7 +4,7 @@ using UnityEngine;
 /// Base class for all monster types
 /// Inherit from this class to create specific monster behaviors
 /// </summary>
-public class MonsterBase : MonoBehaviour
+public class MonsterBase : MonoBehaviour, IHittable
 {
     [Header("Target Settings")]
     protected Transform target; // The camp center or target position
@@ -18,10 +18,23 @@ public class MonsterBase : MonoBehaviour
     
     [Header("Combat Settings")]
     [Tooltip("Monster health points")]
-    public float health = 100f;
+    public float maxHealth = 100f;
+    
+    [Tooltip("Current health")]
+    protected float health;
     
     [Tooltip("Damage dealt to camp when reaching it")]
     public float attackDamage = 10f;
+    
+    [Tooltip("Damage taken from each arrow hit")]
+    public float arrowDamage = 25f;
+    
+    [Header("Physics Settings")]
+    [Tooltip("Rigidbody component for arrow attachment")]
+    private Rigidbody rb;
+    
+    [Tooltip("Should monster fall when killed (like MovingTarget)")]
+    public bool fallWhenKilled = true;
     
     [Header("Animation Settings")]
     [Tooltip("Reference to the Animator component")]
@@ -32,18 +45,49 @@ public class MonsterBase : MonoBehaviour
     
     [Tooltip("Time to wait before destroying monster after attack (for death animation)")]
     public float destroyDelay = 5f;
+    
+    [Tooltip("Time to wait before destroying monster after death (for death animation)")]
+    public float deathDestroyDelay = 3f;
+
+    [Header("Audio Settings")]
+    [Tooltip("Audio source for hit sounds")]
+    public AudioSource hitAudioSource;
 
     // Animation parameter names
     protected const string ANIM_SPAWN = "Spawn";
     protected const string ANIM_WALK = "Walk";
     protected const string ANIM_ATTACK = "Attack";
+    protected const string ANIM_HIT = "Hit";
     protected const string ANIM_DIE = "Die";
+    protected const string ANIM_IS_ALIVE = "IsAlive";
+    protected const string ANIM_HEALTH_PERCENT = "HealthPercent"; // Float parameter for health percentage
 
     protected bool isAlive = true;
     protected bool isSpawning = true;
     protected bool hasAttacked = false;
     protected float spawnTimer = 0f;
     protected float safetyRadius = 2f; // Will be set by spawner
+
+    protected virtual void Awake()
+    {
+        // Get Rigidbody component
+        rb = GetComponent<Rigidbody>();
+        
+        // If no rigidbody exists, add one for arrow attachment
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+        }
+        
+        // Set rigidbody to kinematic initially (monster controls its own movement)
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
+        
+        // Initialize health
+        health = maxHealth;
+    }
 
     protected virtual void Start()
     {
@@ -56,6 +100,19 @@ public class MonsterBase : MonoBehaviour
         if (animator == null)
         {
             Debug.LogWarning($"No Animator found on {gameObject.name}!");
+        }
+        
+        // Get AudioSource if not assigned
+        if (hitAudioSource == null)
+        {
+            hitAudioSource = GetComponent<AudioSource>();
+        }
+
+        // Set initial animator states
+        if (animator != null)
+        {
+            animator.SetBool(ANIM_IS_ALIVE, true);
+            animator.SetFloat(ANIM_HEALTH_PERCENT, 1f);
         }
 
         // Play spawn animation
@@ -159,7 +216,7 @@ public class MonsterBase : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // Move forward
+        // Move forward (using transform for kinematic movement)
         transform.position += direction * moveSpeed * Time.deltaTime;
     }
 
@@ -210,7 +267,17 @@ public class MonsterBase : MonoBehaviour
     }
 
     /// <summary>
-    /// Take damage
+    /// Implementation of IHittable interface - called when hit by arrow
+    /// </summary>
+    public virtual void GetHit()
+    {
+        if (!isAlive) return;
+        
+        TakeDamage(arrowDamage);
+    }
+
+    /// <summary>
+    /// Take damage from any source
     /// </summary>
     public virtual void TakeDamage(float damage)
     {
@@ -218,9 +285,38 @@ public class MonsterBase : MonoBehaviour
 
         health -= damage;
         
+        // Update health percentage in animator
+        float healthPercent = Mathf.Clamp01(health / maxHealth);
+        if (animator != null)
+        {
+            animator.SetFloat(ANIM_HEALTH_PERCENT, healthPercent);
+        }
+        
+        // Play hit sound
+        if (hitAudioSource != null)
+        {
+            hitAudioSource.Play();
+        }
+        
         if (health <= 0)
         {
             Die();
+        }
+        else
+        {
+            // Play hit animation if still alive
+            PlayHitAnimation();
+        }
+    }
+
+    /// <summary>
+    /// Play hit animation when damaged but not killed
+    /// </summary>
+    protected virtual void PlayHitAnimation()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger(ANIM_HIT);
         }
     }
 
@@ -232,22 +328,48 @@ public class MonsterBase : MonoBehaviour
     {
         isAlive = false;
         
-        // Stop all movement
+        // Update animator
         if (animator != null)
         {
+            animator.SetBool(ANIM_IS_ALIVE, false);
             animator.SetBool(ANIM_WALK, false);
             animator.SetTrigger(ANIM_DIE);
         }
 
-        // Disable collider if exists
+        // If fallWhenKilled is enabled, switch rigidbody to dynamic mode
+        // This allows the monster (with attached arrows) to fall naturally
+        if (fallWhenKilled && rb != null)
+        {
+            rb.isKinematic = false;
+            // Optional: add a small upward force for dramatic effect
+            // rb.AddForce(Vector3.up * 2f, ForceMode.Impulse);
+        }
+
+        // Disable collider to prevent further interactions
         Collider col = GetComponent<Collider>();
         if (col != null)
         {
             col.enabled = false;
         }
 
-        // Destroy after death animation (adjust timing as needed)
-        Destroy(gameObject, 2f);
+        // Destroy after death animation
+        Destroy(gameObject, deathDestroyDelay);
+    }
+
+    /// <summary>
+    /// Handle collision with arrows and other objects
+    /// </summary>
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Only play collision sound if not kinematic (i.e., after death and falling)
+        // and not colliding with arrows (arrows have their own impact sounds)
+        if (!rb.isKinematic && !collision.gameObject.CompareTag("Arrow"))
+        {
+            if (hitAudioSource != null)
+            {
+                hitAudioSource.Play();
+            }
+        }
     }
 
     private void OnDrawGizmos()
@@ -264,6 +386,22 @@ public class MonsterBase : MonoBehaviour
         {
             Gizmos.color = Color.cyan;
             Gizmos.DrawLine(transform.position, target.position);
+        }
+        
+        // Visualize health bar above monster
+        if (Application.isPlaying && isAlive)
+        {
+            Vector3 healthBarPos = transform.position + Vector3.up * 2f;
+            float healthPercent = health / maxHealth;
+            
+            // Background (red)
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(healthBarPos - Vector3.right * 0.5f, healthBarPos + Vector3.right * 0.5f);
+            
+            // Foreground (green)
+            Gizmos.color = Color.green;
+            Vector3 healthBarEnd = healthBarPos - Vector3.right * 0.5f + Vector3.right * healthPercent;
+            Gizmos.DrawLine(healthBarPos - Vector3.right * 0.5f, healthBarEnd);
         }
     }
 }
