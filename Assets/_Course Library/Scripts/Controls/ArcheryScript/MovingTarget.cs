@@ -39,15 +39,25 @@ public class MovingTarget : MonoBehaviour, IHittable
         }
     }
 
-    public void GetHit()
+    // public void GetHit()
+    // {
+    //     health--;
+    //     if(health <= 0)
+    //     {
+    //         rb.isKinematic = false;
+    //         stopped = true;
+    //     }
+    // }
+    public void GetHit(Collider hitCollider)
     {
         health--;
-        if(health <= 0)
+        if (health <= 0)
         {
             rb.isKinematic = false;
             stopped = true;
         }
     }
+
 
     private void FixedUpdate()
     {
@@ -64,7 +74,11 @@ public class MovingTarget : MonoBehaviour, IHittable
     }
 }
 
+// public interface IHittable
+// {
+//     void GetHit();
+// }
 public interface IHittable
 {
-    void GetHit();
+    void GetHit(Collider hitCollider);
 }

@@ -12,6 +12,7 @@ TagManager:
   - Flame
   - Trail
   - Arrow
+  - Head
   layers:
   - Default
   - TransparentFX

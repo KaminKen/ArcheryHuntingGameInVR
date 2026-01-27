@@ -269,12 +269,26 @@ public class MonsterBase : MonoBehaviour, IHittable
     /// <summary>
     /// Implementation of IHittable interface - called when hit by arrow
     /// </summary>
-    public virtual void GetHit()
+    // public virtual void GetHit()
+    // {
+    //     if (!isAlive) return;
+        
+    //     TakeDamage(arrowDamage);
+    // }
+    public virtual void GetHit(Collider hitCollider)
     {
         if (!isAlive) return;
-        
-        TakeDamage(arrowDamage);
+
+        float damage = arrowDamage;
+
+        if (hitCollider.CompareTag("Head"))
+        {
+            damage *= 2f;
+        }
+
+        TakeDamage(damage);
     }
+
 
     /// <summary>
     /// Take damage from any source

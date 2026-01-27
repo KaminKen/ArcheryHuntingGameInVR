@@ -72,7 +72,11 @@ public class StickingArrowToSurfaces : MonoBehaviour
         }
 
         // Call hit logic if present
-        collision.collider.GetComponent<IHittable>()?.GetHit();
+        // collision.collider.GetComponent<IHittable>()?.GetHit();
+        // collision.collider.GetComponent<IHittable>()?.GetHit(collision.collider);
+        collision.collider.GetComponentInParent<IHittable>()?.GetHit(collision.collider);
+
+
 
         Destroy(gameObject);
     }
