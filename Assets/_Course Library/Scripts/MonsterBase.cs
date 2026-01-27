@@ -290,6 +290,7 @@ public class MonsterBase : MonoBehaviour, IHittable
         if (animator != null)
         {
             animator.SetFloat(ANIM_HEALTH_PERCENT, healthPercent);
+            
         }
         
         // Play hit sound
@@ -301,6 +302,7 @@ public class MonsterBase : MonoBehaviour, IHittable
         if (health <= 0)
         {
             Die();
+            Debug.LogWarning($"========die=======!");
         }
         else
         {
@@ -334,6 +336,7 @@ public class MonsterBase : MonoBehaviour, IHittable
             animator.SetBool(ANIM_IS_ALIVE, false);
             animator.SetBool(ANIM_WALK, false);
             animator.SetTrigger(ANIM_DIE);
+            
         }
 
         // If fallWhenKilled is enabled, switch rigidbody to dynamic mode
