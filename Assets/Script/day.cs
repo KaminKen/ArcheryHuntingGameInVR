@@ -41,12 +41,6 @@ public class DayNightCyclePlus : MonoBehaviour
     [Range(0f, 1f)]
     public float dawnFogDensity = 0.15f;
     
-    [Tooltip("Distance at which fog starts to obscure view during dawn")]
-    public float dawnFogStartDistance = 10f;
-    
-    [Tooltip("Distance at which fog completely obscures view during dawn")]
-    public float dawnFogEndDistance = 50f;
-    
     [Tooltip("Color of the dawn fog")]
     public Color dawnFogColor = new Color(0.7f, 0.7f, 0.8f, 1f);
 
@@ -363,13 +357,11 @@ public class DayNightCyclePlus : MonoBehaviour
 
         TimePhase currentPhase = gameManager.GetCurrentPhase();
         
+        // Always use ExponentialSquared fog mode for smooth, natural fog
+        RenderSettings.fogMode = FogMode.ExponentialSquared;
+        
         if (currentPhase == TimePhase.Dawn)
         {
-            // Enable linear fog mode for better distance-based visibility control
-            RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = dawnFogStartDistance;
-            RenderSettings.fogEndDistance = dawnFogEndDistance;
-            
             // Set higher fog density during dawn
             float dawnProgress = gameManager.GetNormalizedPhaseTime();
             
@@ -391,13 +383,14 @@ public class DayNightCyclePlus : MonoBehaviour
                 fogIntensity = 1f;
             }
             
-            // Apply fog density
+            // Apply fog density - higher values = denser fog
             RenderSettings.fogDensity = dawnFogDensity * fogIntensity;
         }
         else
         {
-            // Return to exponential fog mode for other phases
-            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            // For other phases, use lighter fog density
+            // This will be further adjusted in UpdateLighting()
+            RenderSettings.fogDensity = 0.02f;
         }
     }
 
