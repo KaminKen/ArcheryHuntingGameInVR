@@ -53,6 +53,8 @@ public class MonsterBase : MonoBehaviour, IHittable
     [Tooltip("Audio source for hit sounds")]
     public AudioSource hitAudioSource;
 
+     public float CurrentHealth => health;
+
     // Animation parameter names
     protected const string ANIM_SPAWN = "Spawn";
     protected const string ANIM_WALK = "Walk";
@@ -67,6 +69,7 @@ public class MonsterBase : MonoBehaviour, IHittable
     protected bool hasAttacked = false;
     protected float spawnTimer = 0f;
     protected float safetyRadius = 2f; // Will be set by spawner
+
 
     protected virtual void Awake()
     {
@@ -258,12 +261,19 @@ public class MonsterBase : MonoBehaviour, IHittable
     }
 
     /// <summary>
-    /// [WIP] Deal damage to the camp
+    /// Deal damage to the camp
     /// </summary>
     protected virtual void DealDamageToCamp()
     {
-        // TODO: Implement camp damage logic
-        Debug.Log($"{gameObject.name} dealt {attackDamage} damage to camp!");
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.TakeDamage(attackDamage);
+            Debug.Log($"{gameObject.name} dealt {attackDamage} damage to camp!");
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name} tried to attack camp but GameManager.Instance is null!");
+        }
     }
 
     /// <summary>
