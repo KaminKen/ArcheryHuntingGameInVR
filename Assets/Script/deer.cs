@@ -28,7 +28,7 @@ public class DeerCollision : MonoBehaviour
 
             // 매니저에게 암전 및 씬 전환 요청
 
-            GameManager.Instance.OnDeerHit();
+            opencontroller.Instance.OnDeerHit();
 
         }
 

@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class GameManager : MonoBehaviour
+public class opencontroller : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static opencontroller Instance;
 
-    private float alpha = 0f;          // 화면 투명도 (0: 투명, 1: 검정)
-    private Texture2D blackTexture;    // 화면을 덮을 검은색 텍스처
-    public float fadeDuration = 1.5f;  // 암전 시간
+    private float alpha = 0f;          
+    private Texture2D blackTexture;    
+    public float fadeDuration = 1.5f;  
 
     private void Awake()
     {
