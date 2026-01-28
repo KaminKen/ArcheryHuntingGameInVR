@@ -32,6 +32,12 @@ public class EndingManager : MonoBehaviour
     public Color buttonColor = new Color(0.2f, 0.6f, 0.9f, 1f);
     public Color buttonHoverColor = new Color(0.3f, 0.7f, 1f, 1f);
 
+    [Header("VR Canvas Distance Settings")]
+    [Tooltip("Distance from camera for UI elements in meters")]
+    [Range(1f, 5f)] public float uiDistance = 2.5f;
+    [Tooltip("Distance from camera for black fade screen in meters")]
+    [Range(0.1f, 2f)] public float fadeScreenDistance = 0.5f;
+
     [Header("Testing Controls (Inspector Only)")]
     [Tooltip("Check this box in Inspector to test SUCCESS ending")]
     public bool testSuccessEnding = false;
@@ -45,6 +51,7 @@ public class EndingManager : MonoBehaviour
     private GameObject worldCanvas;
     private GameObject screenCanvas;
     private GameObject buttonCanvas;
+    private GameObject youDiedCanvas;
     private Text worldText;
     private Text screenText;
     private Text youDiedText;
@@ -114,6 +121,9 @@ public class EndingManager : MonoBehaviour
 
     void Update()
     {
+        // Update UI positions to always face camera
+        UpdateUIPositions();
+
         // Smoothly rotate deer to look at target
         if (currentLookTarget != null && deer != null && deer.activeSelf)
         {
@@ -136,6 +146,42 @@ public class EndingManager : MonoBehaviour
         if (buttonCanvas != null && buttonCanvas.activeSelf)
         {
             CheckVRControllerInput();
+        }
+    }
+
+    void UpdateUIPositions()
+    {
+        // Update all screen-space UI elements to face the camera and maintain proper distance
+        if (Camera.main == null) return;
+
+        Transform camTransform = Camera.main.transform;
+        
+        // Update black screen position (very close to camera)
+        if (blackScreen != null && blackScreen.activeSelf)
+        {
+            blackScreen.transform.position = camTransform.position + camTransform.forward * fadeScreenDistance;
+            blackScreen.transform.rotation = Quaternion.LookRotation(blackScreen.transform.position - camTransform.position);
+        }
+
+        // Update "YOU DIED" text position
+        if (youDiedCanvas != null && youDiedCanvas.activeSelf)
+        {
+            youDiedCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
+            youDiedCanvas.transform.rotation = Quaternion.LookRotation(youDiedCanvas.transform.position - camTransform.position);
+        }
+
+        // Update screen subtitle position (player dialogue)
+        if (screenCanvas != null && screenCanvas.activeSelf)
+        {
+            screenCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
+            screenCanvas.transform.rotation = Quaternion.LookRotation(screenCanvas.transform.position - camTransform.position);
+        }
+
+        // Update button canvas position
+        if (buttonCanvas != null && buttonCanvas.activeSelf)
+        {
+            buttonCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
+            buttonCanvas.transform.rotation = Quaternion.LookRotation(buttonCanvas.transform.position - camTransform.position);
         }
     }
 
@@ -204,75 +250,162 @@ public class EndingManager : MonoBehaviour
         Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (defaultFont == null) defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-        // Create main canvas
-        GameObject canvasObj = new GameObject("EndingCanvas");
-        Canvas canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 999;
-        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        
-        // Add GraphicRaycaster for VR pointer interaction
-        GraphicRaycaster raycaster = canvasObj.AddComponent<GraphicRaycaster>();
-        raycaster.ignoreReversedGraphics = true;
-        raycaster.blockingObjects = GraphicRaycaster.BlockingObjects.None;
+        // Create black screen for fade effects (WorldSpace Canvas for VR)
+        CreateBlackScreen(defaultFont);
 
-        // Create black screen for fade effects
-        blackScreen = new GameObject("BlackFade");
-        blackScreen.transform.SetParent(canvasObj.transform, false);
-        Image blackImg = blackScreen.AddComponent<Image>();
+        // Create "YOU DIED" text canvas (WorldSpace for VR)
+        CreateYouDiedCanvas(defaultFont);
+
+        // Create screen subtitle for player dialogue (WorldSpace for VR)
+        CreateScreenSubtitleCanvas(defaultFont);
+
+        // Create world space subtitle for deer dialogue (already WorldSpace)
+        CreateWorldSubtitleCanvas(defaultFont);
+
+        // Create button canvas for return to title button (WorldSpace for VR)
+        CreateButtonCanvas(defaultFont);
+    }
+
+    void CreateBlackScreen(Font font)
+    {
+        // Create black screen as WorldSpace canvas for VR compatibility
+        blackScreen = new GameObject("BlackFadeCanvas");
+        Canvas canvas = blackScreen.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        
+        // Set canvas size and scale for VR
+        RectTransform canvasRect = blackScreen.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(100, 100); // Large enough to cover view
+        blackScreen.transform.localScale = Vector3.one * 0.02f; // Scale to appropriate size in world space
+        
+        // Add GraphicRaycaster (not needed for black screen but good practice)
+        GraphicRaycaster raycaster = blackScreen.AddComponent<GraphicRaycaster>();
+        raycaster.ignoreReversedGraphics = true;
+
+        // Create black image
+        GameObject blackObj = new GameObject("BlackImage");
+        blackObj.transform.SetParent(blackScreen.transform, false);
+        Image blackImg = blackObj.AddComponent<Image>();
         blackImg.color = new Color(0, 0, 0, 1); // Start with black
         blackImg.raycastTarget = false;
-        SetStretch(blackScreen.GetComponent<RectTransform>());
+        SetStretch(blackObj.GetComponent<RectTransform>());
 
-        // Create "YOU DIED" text (for failure ending)
-        GameObject youDiedObj = new GameObject("YouDiedText");
-        youDiedObj.transform.SetParent(canvasObj.transform, false);
-        youDiedText = youDiedObj.AddComponent<Text>();
-        youDiedText.font = defaultFont;
+        Debug.Log("[EndingManager] Created WorldSpace black screen for VR");
+    }
+
+    void CreateYouDiedCanvas(Font font)
+    {
+        // Create "YOU DIED" text as WorldSpace canvas for VR
+        youDiedCanvas = new GameObject("YouDiedCanvas");
+        Canvas canvas = youDiedCanvas.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.sortingOrder = 100;
+        
+        // Set canvas size and scale
+        RectTransform canvasRect = youDiedCanvas.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(800, 200);
+        youDiedCanvas.transform.localScale = Vector3.one * 0.002f; // Smaller scale for text readability
+        
+        // Add GraphicRaycaster
+        GraphicRaycaster raycaster = youDiedCanvas.AddComponent<GraphicRaycaster>();
+
+        // Create "YOU DIED" text
+        GameObject textObj = new GameObject("YouDiedText");
+        textObj.transform.SetParent(youDiedCanvas.transform, false);
+        youDiedText = textObj.AddComponent<Text>();
+        youDiedText.font = font;
         youDiedText.text = "YOU DIED";
         youDiedText.fontSize = 80;
         youDiedText.alignment = TextAnchor.MiddleCenter;
         youDiedText.color = new Color(0.8f, 0.1f, 0.1f, 1f); // Dark red
         youDiedText.fontStyle = FontStyle.Bold;
-        RectTransform youDiedRect = youDiedText.GetComponent<RectTransform>();
-        youDiedRect.anchorMin = new Vector2(0.5f, 0.5f);
-        youDiedRect.anchorMax = new Vector2(0.5f, 0.5f);
-        youDiedRect.sizeDelta = new Vector2(800, 150);
-        youDiedRect.anchoredPosition = Vector2.zero;
-        youDiedObj.SetActive(false);
+        
+        RectTransform textRect = youDiedText.GetComponent<RectTransform>();
+        textRect.anchorMin = new Vector2(0.5f, 0.5f);
+        textRect.anchorMax = new Vector2(0.5f, 0.5f);
+        textRect.sizeDelta = new Vector2(800, 150);
+        textRect.anchoredPosition = Vector2.zero;
+        
+        youDiedCanvas.SetActive(false);
 
-        // Create screen subtitle for player dialogue
-        screenCanvas = new GameObject("PlayerSubtitle");
-        screenCanvas.transform.SetParent(canvasObj.transform, false);
+        Debug.Log("[EndingManager] Created WorldSpace 'YOU DIED' canvas for VR");
+    }
+
+    void CreateScreenSubtitleCanvas(Font font)
+    {
+        // Create screen subtitle as WorldSpace canvas for VR (player dialogue)
+        screenCanvas = new GameObject("PlayerSubtitleCanvas");
+        Canvas canvas = screenCanvas.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.sortingOrder = 50;
+        
+        // Set canvas size and scale
+        RectTransform canvasRect = screenCanvas.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = screenBubbleSize;
+        screenCanvas.transform.localScale = Vector3.one * 0.002f;
+        
+        // Add GraphicRaycaster
+        GraphicRaycaster raycaster = screenCanvas.AddComponent<GraphicRaycaster>();
+
+        // Create background
         Image subBg = screenCanvas.AddComponent<Image>();
         subBg.color = new Color(0, 0, 0, 0.85f);
-        screenText = CreateTextComponent(screenCanvas.transform, defaultFont, screenFontSize);
-        RectTransform subRect = screenCanvas.GetComponent<RectTransform>();
-        subRect.sizeDelta = screenBubbleSize;
-        subRect.anchoredPosition = new Vector2(0, 80);
-        subRect.anchorMin = new Vector2(0.5f, 0);
-        subRect.anchorMax = new Vector2(0.5f, 0);
+        
+        // Create text
+        screenText = CreateTextComponent(screenCanvas.transform, font, screenFontSize);
+        
         screenCanvas.SetActive(false);
 
-        // Create world space subtitle for deer dialogue
-        worldCanvas = new GameObject("WorldSubtitle");
+        Debug.Log("[EndingManager] Created WorldSpace screen subtitle canvas for VR");
+    }
+
+    void CreateWorldSubtitleCanvas(Font font)
+    {
+        // Create world space subtitle for deer dialogue (already WorldSpace, just keep it)
+        worldCanvas = new GameObject("WorldSubtitleCanvas");
         Canvas wCanvas = worldCanvas.AddComponent<Canvas>();
         wCanvas.renderMode = RenderMode.WorldSpace;
+        wCanvas.sortingOrder = 50;
+        
         RectTransform wRect = worldCanvas.GetComponent<RectTransform>();
         wRect.sizeDelta = worldBubbleSize;
         worldCanvas.transform.localScale = Vector3.one * 0.01f;
+        
+        // Add GraphicRaycaster
+        GraphicRaycaster raycaster = worldCanvas.AddComponent<GraphicRaycaster>();
+        
         Image wBg = worldCanvas.AddComponent<Image>();
         wBg.color = new Color(0, 0, 0, 0.85f);
-        worldText = CreateTextComponent(worldCanvas.transform, defaultFont, worldFontSize);
+        worldText = CreateTextComponent(worldCanvas.transform, font, worldFontSize);
         worldCanvas.SetActive(false);
 
-        // Create button canvas for return to title button
+        Debug.Log("[EndingManager] Created WorldSpace world subtitle canvas for VR");
+    }
+
+    void CreateButtonCanvas(Font font)
+    {
+        // Create button canvas as WorldSpace for VR compatibility
         buttonCanvas = new GameObject("ButtonCanvas");
-        buttonCanvas.transform.SetParent(canvasObj.transform, false);
-        CreateReturnButton(buttonCanvas.transform, defaultFont);
+        Canvas canvas = buttonCanvas.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+        canvas.sortingOrder = 100;
+        
+        // Set canvas size and scale
+        RectTransform canvasRect = buttonCanvas.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(400, 300);
+        buttonCanvas.transform.localScale = Vector3.one * 0.002f;
+        
+        // Add GraphicRaycaster for VR pointer interaction
+        GraphicRaycaster raycaster = buttonCanvas.AddComponent<GraphicRaycaster>();
+        raycaster.ignoreReversedGraphics = true;
+        raycaster.blockingObjects = GraphicRaycaster.BlockingObjects.None;
+
+        // Create return button
+        CreateReturnButton(buttonCanvas.transform, font);
+        
         buttonCanvas.SetActive(false);
+
+        Debug.Log("[EndingManager] Created WorldSpace button canvas for VR");
     }
 
     Text CreateTextComponent(Transform parent, Font font, int fontSize)
@@ -300,12 +433,12 @@ public class EndingManager : MonoBehaviour
         GameObject buttonObj = new GameObject("ReturnButton");
         buttonObj.transform.SetParent(parent, false);
         
-        // Set button position and size (larger for VR interaction)
+        // Set button position and size (centered for VR interaction)
         RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
         buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
         buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
         buttonRect.sizeDelta = buttonSize;
-        buttonRect.anchoredPosition = new Vector2(0, -200);
+        buttonRect.anchoredPosition = Vector2.zero; // Center in canvas
 
         // Add button component
         returnButton = buttonObj.AddComponent<Button>();
@@ -313,7 +446,7 @@ public class EndingManager : MonoBehaviour
         buttonImg.color = buttonColor;
         buttonImg.raycastTarget = true; // Ensure button can receive VR pointer events
 
-        // Add outline for better visibility
+        // Add outline for better visibility in VR
         Outline outline = buttonObj.AddComponent<Outline>();
         outline.effectColor = Color.white;
         outline.effectDistance = new Vector2(2, 2);
@@ -352,10 +485,10 @@ public class EndingManager : MonoBehaviour
         nav.mode = Navigation.Mode.None; // Only one button, no navigation needed
         returnButton.navigation = nav;
 
-        // Add click event (for UI raycast interaction, if it works)
+        // Add click event (works with VR pointer/raycast interaction)
         returnButton.onClick.AddListener(ReturnToOpening);
         
-        Debug.Log("[EndingManager] Return button created - Press A/B/X/Y on VR controller to return");
+        Debug.Log("[EndingManager] Return button created - Press A/B/X/Y on VR controller or point and click");
     }
 
     void SetStretch(RectTransform rt)
@@ -421,7 +554,7 @@ public class EndingManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // Show "YOU DIED" text
-        youDiedText.gameObject.SetActive(true);
+        youDiedCanvas.SetActive(true);
         
         // Fade in "YOU DIED" text
         Text youDiedComponent = youDiedText;
@@ -449,7 +582,7 @@ public class EndingManager : MonoBehaviour
             yield return null;
         }
 
-        youDiedText.gameObject.SetActive(false);
+        youDiedCanvas.SetActive(false);
 
         // Wait before showing button
         yield return new WaitForSeconds(0.5f);
@@ -466,7 +599,7 @@ public class EndingManager : MonoBehaviour
 
         if (target == null)
         {
-            // Show as screen subtitle (for player dialogue)
+            // Show as screen subtitle (for player dialogue) - now in world space facing camera
             screenCanvas.SetActive(true);
             screenText.text = textLine;
             yield return new WaitForSeconds(displayTime);
@@ -500,7 +633,14 @@ public class EndingManager : MonoBehaviour
 
     IEnumerator FadeEffect(float targetAlpha)
     {
-        Image img = blackScreen.GetComponent<Image>();
+        // Find the Image component in the black screen's child
+        Image img = blackScreen.GetComponentInChildren<Image>();
+        if (img == null)
+        {
+            Debug.LogError("[EndingManager] Black screen Image component not found!");
+            yield break;
+        }
+
         float startAlpha = img.color.a;
         float elapsed = 0;
         float fadeDuration = 1.2f;
