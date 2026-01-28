@@ -4,24 +4,24 @@ using UnityEngine.UI;
 
 public class SimpleAdventureManager : MonoBehaviour
 {
-    [Header("¿ÀºêÁ§Æ® ¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½")]
     public GameObject player;
     public GameObject deer;
     public GameObject tent;
     public AudioSource soundEffect;
 
-    [Header("¾Ö´Ï¸ÞÀÌ¼Ç ¼³Á¤")]
+    [Header("ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [Range(1f, 10f)] public float textHeight = 2.5f;
-    [Range(1f, 20f)] public float turnSpeed = 5.0f; // È¸Àü ¼Óµµ Á¶Àý
+    [Range(1f, 20f)] public float turnSpeed = 5.0f; // È¸ï¿½ï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½
     public bool startAnimation = false;
 
-    [Header("UI Å©±â ¹× ÆùÆ® Ä¿½ºÅÒ")]
+    [Header("UI Å©ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Æ® Ä¿ï¿½ï¿½ï¿½ï¿½")]
     public Vector2 worldBubbleSize = new Vector2(600, 200);
     public Vector2 screenBubbleSize = new Vector2(900, 150);
     [Range(10, 100)] public int worldFontSize = 40;
     [Range(10, 100)] public int screenFontSize = 24;
 
-    [Header("´ë»ç ½Ã°£ ¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public float timePerChar = 0.1f;
     public float minDisplayTime = 1.5f;
     public float maxDisplayTime = 5.0f;
@@ -34,7 +34,7 @@ public class SimpleAdventureManager : MonoBehaviour
     private bool isRunning = false;
     private bool isFunction1Active = true;
 
-    // È¸Àü Á¦¾î º¯¼ö
+    // È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private Transform currentLookTarget;
 
     void OnValidate()
@@ -57,11 +57,11 @@ public class SimpleAdventureManager : MonoBehaviour
 
     void Update()
     {
-        // Å¸°ÙÀÌ ¼³Á¤µÇ¾î ÀÖÀ» °æ¿ì ºÎµå·´°Ô È¸Àü
+        // Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ È¸ï¿½ï¿½
         if (currentLookTarget != null && deer != null && deer.activeSelf)
         {
             Vector3 direction = currentLookTarget.position - deer.transform.position;
-            direction.y = 0; // ¼öÆò È¸Àü À¯Áö
+            direction.y = 0; // ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
             if (direction.sqrMagnitude > 0.01f)
             {
@@ -154,36 +154,35 @@ public class SimpleAdventureManager : MonoBehaviour
         if (deer != null)
         {
             deer.transform.position = player.transform.position + player.transform.forward * 3.0f;
-            currentLookTarget = player.transform; // ÁÖÀÎ°øÀ» ºÎµå·´°Ô ¹Ù¶óº¸±â ½ÃÀÛ
+            currentLookTarget = player.transform; // ï¿½ï¿½ï¿½Î°ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Ù¶óº¸±ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
         yield return StartCoroutine(FadeEffect(0f));
 
-        yield return ShowTalk(deer, "Deer", "So¡¦ why did you shoot me?");
-        yield return ShowTalk(null, "Player", "Uh¡¦ because it¡¯s a game?");
-        yield return ShowTalk(deer, "Deer", "Must be nice, living that kind of life.");
-        yield return ShowTalk(deer, "Deer", "You stick an arrow in an innocent creature¡¯s butt and that¡¯s what you say?");
-        yield return ShowTalk(deer, "Deer", "¡°Well, it¡¯s a game.¡±");
-        yield return ShowTalk(null, "Player", "Sorry¡¦");
-        yield return ShowTalk(deer, "Deer", "I want to call the cops, honestly.\nBut we¡¯re in the middle of the forest.");
+        yield return ShowTalk(deer, "Deer", "Why did you shoot me?");
+        yield return ShowTalk(null, "Player", "Uh, the game told me to");
+        yield return ShowTalk(deer, "Deer", "You dared say!");
+        yield return ShowTalk(deer, "Deer", "You stuck an arrow in an innocent creatures butt? and that's what you say?");
+        yield return ShowTalk(null, "Player", "Sorry...");
+        yield return ShowTalk(deer, "Deer", "I want to call the cops, honestly.\nBut there is no signal in this deep dark forest.");
 
-        // [Çàµ¿] ÅÙÆ® ÂÊÀ¸·Î ºÎµå·´°Ô ½Ã¼± ÀüÈ¯
+        // [ï¿½àµ¿] ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Ã¼ï¿½ ï¿½ï¿½È¯
         currentLookTarget = tent.transform;
 
-        yield return ShowTalk(deer, "Deer", "Oh. Nice camp.\nIf I rest here for one night, I¡¯ll be totally fine.");
-        yield return ShowTalk(null, "Player", "That¡¯s my camp though?");
+        yield return ShowTalk(deer, "Deer", "Wow, cozy camp.\nI'm going to rest here for a night.");
+        yield return ShowTalk(null, "Player", "That's my camp though?");
+        yield return ShowTalk(deer, "Deer", "XD");
 
-        // ÀÌµ¿ ½ÃÀÛ ½Ã ½Ã¼± ÃßÀû Áß´Ü (ÀÌµ¿ ¹æÇâÀ» º¸±â À§ÇØ)
+        // ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ã¼ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß´ï¿½ (ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         currentLookTarget = null;
         yield return StartCoroutine(MoveDeerToTent());
         if (deer != null) deer.SetActive(false);
 
         yield return ShowTalk(tent, "Deer", "Oh, is this a sleeping bag? Perfect.");
-        yield return ShowTalk(tent, "Deer", "Oh right. While I¡¯m resting, skeletons are gonna swarm in, so¡¦ block them for me.");
+        yield return ShowTalk(tent, "Deer", "Oh right. While I'm resting, skeletons are going to swarm in, so protect me.");
         yield return ShowTalk(null, "Player", "What? Does that even make sense?");
-        yield return ShowTalk(tent, "Deer", "A deer talking makes sense, but that doesn¡¯t?");
-        yield return ShowTalk(tent, "Deer", "Actually, tomorrow¡¯s a holiday, so the skeletons won¡¯t show up.");
-        yield return ShowTalk(tent, "Deer", "Hang in there for one day.\nBye.");
+        yield return ShowTalk(tent, "Deer", "A talking-deer makes sense, but that doesn't?");
+        yield return ShowTalk(tent, "Deer", "Good Luck.\nBye.");
 
         isRunning = false;
     }
@@ -223,7 +222,7 @@ public class SimpleAdventureManager : MonoBehaviour
     {
         while (deer != null && Vector3.Distance(deer.transform.position, tent.transform.position) > 0.6f)
         {
-            // ÀÌµ¿ ¹æÇâÀ» ºÎµå·´°Ô ¹Ù¶óº¸¸ç ÀÌµ¿
+            // ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Ù¶óº¸¸ï¿½ ï¿½Ìµï¿½
             Vector3 moveDir = tent.transform.position - deer.transform.position;
             moveDir.y = 0;
             if (moveDir.sqrMagnitude > 0.01f)
