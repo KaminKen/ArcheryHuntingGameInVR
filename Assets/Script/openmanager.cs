@@ -1,28 +1,31 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // 이 줄을 추가하세요
+using UnityEngine.SceneManagement;
 
-public class SimpleAdventureManager : MonoBehaviour
+public class openmanager : MonoBehaviour
 {
-    [Header("������Ʈ ����")]
+    // Singleton instance
+    public static openmanager Instance { get; private set; }
+
+    [Header("Object Settings")]
     public GameObject player;
     public GameObject deer;
     public GameObject tent;
     public AudioSource soundEffect;
 
-    [Header("�ִϸ��̼� ����")]
+    [Header("Animation Settings")]
     [Range(1f, 10f)] public float textHeight = 2.5f;
-    [Range(1f, 20f)] public float turnSpeed = 5.0f; // ȸ�� �ӵ� ����
+    [Range(1f, 20f)] public float turnSpeed = 5.0f; // Rotation speed setting
     public bool startAnimation = false;
 
-    [Header("UI ũ�� �� ��Ʈ Ŀ����")]
+    [Header("UI Size and Font Customization")]
     public Vector2 worldBubbleSize = new Vector2(600, 200);
     public Vector2 screenBubbleSize = new Vector2(900, 150);
     [Range(10, 100)] public int worldFontSize = 40;
     [Range(10, 100)] public int screenFontSize = 24;
 
-    [Header("��� �ð� ����")]
+    [Header("Display Time Settings")]
     public float timePerChar = 0.1f;
     public float minDisplayTime = 1.5f;
     public float maxDisplayTime = 5.0f;
@@ -35,7 +38,7 @@ public class SimpleAdventureManager : MonoBehaviour
     private bool isRunning = false;
     private bool isFunction1Active = true;
 
-    // ȸ�� ���� ����
+    // Rotation target reference
     private Transform currentLookTarget;
 
     void OnValidate()
@@ -53,16 +56,27 @@ public class SimpleAdventureManager : MonoBehaviour
 
     void Awake()
     {
+        // Set up Singleton instance
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         CreateUIElements();
     }
 
     void Update()
     {
-        // Ÿ���� �����Ǿ� ���� ��� �ε巴�� ȸ��
+        // If target is set and deer is active, rotate deer to look at target
         if (currentLookTarget != null && deer != null && deer.activeSelf)
         {
             Vector3 direction = currentLookTarget.position - deer.transform.position;
-            direction.y = 0; // ���� ȸ�� ����
+            direction.y = 0; // Disable vertical rotation
 
             if (direction.sqrMagnitude > 0.01f)
             {
@@ -138,6 +152,12 @@ public class SimpleAdventureManager : MonoBehaviour
         rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
     }
 
+    // Public method called when deer is hit by arrow
+    public void OnDeerHit()
+    {
+        TriggerArrowEvent();
+    }
+
     public void TriggerArrowEvent()
     {
         if (isFunction1Active && !isRunning) StartCoroutine(MainSequence());
@@ -155,7 +175,7 @@ public class SimpleAdventureManager : MonoBehaviour
         if (deer != null)
         {
             deer.transform.position = player.transform.position + player.transform.forward * 3.0f;
-            currentLookTarget = player.transform; // ���ΰ��� �ε巴�� �ٶ󺸱� ����
+            currentLookTarget = player.transform; // Set deer to look at player
         }
 
         yield return StartCoroutine(FadeEffect(0f));
@@ -167,14 +187,14 @@ public class SimpleAdventureManager : MonoBehaviour
         yield return ShowTalk(null, "Player", "Sorry...");
         yield return ShowTalk(deer, "Deer", "I want to call the cops, honestly.\nBut there is no signal in this deep dark forest.");
 
-        // [�ൿ] ��Ʈ ������ �ε巴�� �ü� ��ȯ
+        // [Action] Switch deer's focus to tent
         currentLookTarget = tent.transform;
 
         yield return ShowTalk(deer, "Deer", "Wow, cozy camp.\nI'm going to rest here for a night.");
         yield return ShowTalk(null, "Player", "That's my camp though?");
         yield return ShowTalk(deer, "Deer", "XD");
 
-        // �̵� ���� �� �ü� ���� �ߴ� (�̵� ������ ���� ����)
+        // Clear look target before moving (no rotation during movement)
         currentLookTarget = null;
         yield return StartCoroutine(MoveDeerToTent());
         if (deer != null) deer.SetActive(false);
@@ -185,12 +205,10 @@ public class SimpleAdventureManager : MonoBehaviour
         yield return ShowTalk(tent, "Deer", "A talking-deer makes sense, but that doesn't?");
         yield return ShowTalk(tent, "Deer", "Good Luck.\nBye.");
         yield return StartCoroutine(FadeEffect(1f));
-        yield return new WaitForSeconds(1f); // 잠시 대기
+        yield return new WaitForSeconds(1f); // Wait briefly
 
-        // 2. 씬 전환
+        // Scene transition
         SceneManager.LoadScene("Main_Scene");
-
-        // --- 여기까지 ---
 
         isRunning = false;
     }
@@ -230,7 +248,7 @@ public class SimpleAdventureManager : MonoBehaviour
     {
         while (deer != null && Vector3.Distance(deer.transform.position, tent.transform.position) > 0.6f)
         {
-            // �̵� ������ �ε巴�� �ٶ󺸸� �̵�
+            // During movement, deer looks toward tent while moving
             Vector3 moveDir = tent.transform.position - deer.transform.position;
             moveDir.y = 0;
             if (moveDir.sqrMagnitude > 0.01f)
