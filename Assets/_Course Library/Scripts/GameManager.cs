@@ -62,6 +62,31 @@ public class GameManager : MonoBehaviour
     [Tooltip("Called when player loses (camp destroyed)")]
     public UnityEngine.Events.UnityEvent onLose;
 
+    [SerializeField] private MonsterSpawner spawner;
+
+    [Header("Spawner Difficulty By Phase")]
+    [SerializeField] private float daySpawnInterval = 3f;
+    [SerializeField] private float nightSpawnInterval = 2f;
+    [SerializeField] private float dawnSpawnInterval = 1.2f;
+
+    [SerializeField] private float daySpawnAngle = 180f;
+    [SerializeField] private float nightSpawnAngle = 180f;
+    [SerializeField] private float dawnSpawnAngle = 360f;
+
+    [SerializeField] private int dayMaxActive = 0;    // 0 = unlimited (keep as-is)
+    [SerializeField] private int nightMaxActive = 0;
+    [SerializeField] private int dawnMaxActive = 0;
+
+    [Header("Skeleton Rush (Night/Dawn)")]
+    [SerializeField] private bool enableSkeletonRushAtNight = true;
+    [SerializeField] private bool enableSkeletonRushAtDawn = true;
+
+    // speed multiplier range for “some skeleton is rushing”
+    [SerializeField] private Vector2 nightSkeletonSpeedMulRange = new Vector2(1.0f, 1.8f);
+    [SerializeField] private Vector2 dawnSkeletonSpeedMulRange  = new Vector2(1.2f, 2.2f);
+
+
+
     // Singleton instance for easy access from monsters
     public static GameManager Instance { get; private set; }
     
@@ -187,32 +212,43 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when Day phase starts - spawn day monsters here
-    /// </summary>
     private void OnDayPhaseStarted()
     {
-        Debug.Log("[Monster Spawn Interface] Day phase started - spawn day monsters");
-        // TODO: Implement day monster spawning logic
+        if (spawner == null) return;
+
+        spawner.spawnInterval = daySpawnInterval;
+        spawner.spawnAngleRange = daySpawnAngle;
+        spawner.maxActiveMonsters = dayMaxActive;
+
+        spawner.enableSkeletonRush = false; // keep as-is
     }
 
-    /// <summary>
-    /// Called when Night phase starts - spawn night monsters here
-    /// </summary>
     private void OnNightPhaseStarted()
     {
-        Debug.Log("[Monster Spawn Interface] Night phase started - spawn night monsters");
-        // TODO: Implement night monster spawning logic
+        if (spawner == null) return;
+
+        spawner.spawnInterval = nightSpawnInterval;
+        spawner.spawnAngleRange = nightSpawnAngle;
+        spawner.maxActiveMonsters = nightMaxActive;
+
+        spawner.enableSkeletonRush = enableSkeletonRushAtNight;
+        spawner.skeletonSpeedMulMin = nightSkeletonSpeedMulRange.x;
+        spawner.skeletonSpeedMulMax = nightSkeletonSpeedMulRange.y;
     }
 
-    /// <summary>
-    /// Called when Dawn phase starts - spawn dawn monsters here
-    /// </summary>
     private void OnDawnPhaseStarted()
     {
-        Debug.Log("[Monster Spawn Interface] Dawn phase started - spawn dawn monsters");
-        // TODO: Implement dawn monster spawning logic
+        if (spawner == null) return;
+
+        spawner.spawnInterval = dawnSpawnInterval;
+        spawner.spawnAngleRange = dawnSpawnAngle; // 360° final phase
+        spawner.maxActiveMonsters = dawnMaxActive;
+
+        spawner.enableSkeletonRush = enableSkeletonRushAtDawn;
+        spawner.skeletonSpeedMulMin = dawnSkeletonSpeedMulRange.x;
+        spawner.skeletonSpeedMulMax = dawnSkeletonSpeedMulRange.y;
     }
+
 
     /// <summary>
     /// Get the duration of a specific phase in seconds

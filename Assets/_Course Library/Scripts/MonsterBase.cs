@@ -53,7 +53,7 @@ public class MonsterBase : MonoBehaviour, IHittable
     [Tooltip("Audio source for hit sounds")]
     public AudioSource hitAudioSource;
 
-     public float CurrentHealth => health;
+    public float CurrentHealth => health;
 
     // Animation parameter names
     protected const string ANIM_SPAWN = "Spawn";
@@ -69,6 +69,14 @@ public class MonsterBase : MonoBehaviour, IHittable
     protected bool hasAttacked = false;
     protected float spawnTimer = 0f;
     protected float safetyRadius = 2f; // Will be set by spawner
+
+    private float speedMultiplier = 1f;
+
+    public void SetSpeedMultiplier(float mul)
+    {
+        speedMultiplier = Mathf.Clamp(mul, 0.1f, 5f);
+    }
+
 
 
     protected virtual void Awake()
@@ -216,11 +224,12 @@ public class MonsterBase : MonoBehaviour, IHittable
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * speedMultiplier * Time.deltaTime);
         }
 
         // Move forward (using transform for kinematic movement)
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        transform.position += direction * moveSpeed * speedMultiplier * Time.deltaTime;
+
     }
 
     /// <summary>

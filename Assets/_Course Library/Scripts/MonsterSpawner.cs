@@ -52,11 +52,24 @@ public class MonsterSpawner : MonoBehaviour
     [Tooltip("Maximum total monsters to spawn (0 = unlimited)")]
     public int maxTotalSpawns = 0;
 
+    [Header("Skeleton Rush Settings")]
+    public bool enableSkeletonRush = false;
+    public float skeletonSpeedMulMin = 1.0f;
+    public float skeletonSpeedMulMax = 2.0f;
+
+    [Tooltip("Optional: identify skeleton by name contains this keyword")]
+    public string skeletonNameKeyword = "Skeleton";
+
+    public string skeletonTag = "Skeleton";
+
     // Private variables
     private bool isSpawning = false;
     private int currentActiveMonsters = 0;
     private int totalSpawned = 0;
     private List<GameObject> activeMonsters = new List<GameObject>();
+
+
+
 
     void Start()
     {
@@ -178,6 +191,14 @@ public class MonsterSpawner : MonoBehaviour
         {
             monsterScript.SetTarget(campCenter);
             monsterScript.SetSafetyRadius(campSafetyRadius);
+
+            // Rush behavior (some skeletons faster)
+            if (enableSkeletonRush && monster.CompareTag(skeletonTag))
+            {
+                float mul = Random.Range(skeletonSpeedMulMin, skeletonSpeedMulMax);
+                monsterScript.SetSpeedMultiplier(mul);
+            }
+
         }
 
         // Track the monster
