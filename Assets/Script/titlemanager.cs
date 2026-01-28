@@ -2,15 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+// VR 레이캐스트 지원을 위해 필수
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.Events; // 에디터에서 이벤트를 영구 기록하기 위함
 #endif
 
-public class TitleSceneGenerator : MonoBehaviour
+public class titlemanager : MonoBehaviour
 {
     [Header("Title Settings")]
-    public string gameTitle = "MY AWESOME VR GAME";
+    public string gameTitle = "MY VR ADVENTURE";
     public string openingSceneName = "OpeningScene";
 
     [Header("Transform Settings")]
@@ -18,28 +21,26 @@ public class TitleSceneGenerator : MonoBehaviour
     public Vector3 panelRotation = new Vector3(0, 0, 0);
 
     [Header("Visual Customization")]
-    public Color panelColor = new Color(0, 0, 0, 0.85f);
-    public Color buttonColor = Color.white;
-    public Vector2 buttonSize = new Vector2(300, 70);
+    public Color panelColor = new Color(0, 0, 0, 0.9f);
+    public Vector2 buttonSize = new Vector2(350, 80);
 
-    // 에디터에서 버튼을 만들기 위한 함수
-    [ContextMenu("Generate Title UI")] // 인스펙터 컴포넌트 우클릭 메뉴에서 실행 가능
+    [ContextMenu("Generate Title UI")]
     public void GenerateTitleUI()
     {
-        // 1. 기존에 생성된 UI가 있다면 삭제 (중복 방지)
-        GameObject existingCanvas = GameObject.Find("TitleCanvas_Permanent");
-        if (existingCanvas != null)
-        {
-            DestroyImmediate(existingCanvas);
-        }
+        // 1. 기존 UI 제거
+        GameObject oldCanvas = GameObject.Find("TitleCanvas_VR_Permanent");
+        if (oldCanvas != null) DestroyImmediate(oldCanvas);
 
-        // 2. Canvas 생성
-        GameObject canvasObj = new GameObject("TitleCanvas_Permanent");
+        // 2. Canvas 생성 및 VR 설정
+        GameObject canvasObj = new GameObject("TitleCanvas_VR_Permanent");
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
 
+        // 
+
+        // VR에서 컨트롤러 광선을 인식하게 하는 핵심 컴포넌트
+        canvasObj.AddComponent<TrackedDeviceGraphicRaycaster>();
         canvasObj.AddComponent<CanvasScaler>();
-        canvasObj.AddComponent<GraphicRaycaster>();
 
         RectTransform canvasRT = canvas.GetComponent<RectTransform>();
         canvasRT.position = panelPosition;
@@ -47,34 +48,32 @@ public class TitleSceneGenerator : MonoBehaviour
         canvasRT.sizeDelta = new Vector2(600, 800);
         canvasRT.localScale = new Vector3(0.005f, 0.005f, 0.005f);
 
-        // 3. 배경 Panel 생성
-        GameObject panelObj = new GameObject("BackgroundPanel");
+        // VR 클릭을 돕기 위한 박스 콜라이더 추가 (선택 사항이나 권장)
+        BoxCollider collider = canvasObj.AddComponent<BoxCollider>();
+        collider.size = new Vector3(600, 800, 1);
+
+        // 3. 패널 및 레이아웃
+        GameObject panelObj = new GameObject("Background");
         panelObj.transform.SetParent(canvasObj.transform, false);
-        Image panelImage = panelObj.AddComponent<Image>();
-        panelImage.color = panelColor;
+        panelObj.AddComponent<Image>().color = panelColor;
 
-        RectTransform panelRT = panelObj.GetComponent<RectTransform>();
-        panelRT.anchorMin = Vector2.zero;
-        panelRT.anchorMax = Vector2.one;
-        panelRT.sizeDelta = Vector2.zero;
-
-        // 4. 레이아웃 설정
         VerticalLayoutGroup layout = panelObj.AddComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.spacing = 50;
+        layout.spacing = 60;
         layout.childControlHeight = false;
         layout.childControlWidth = false;
 
-        // 5. 제목 생성
-        CreateText(panelObj.transform, gameTitle, 70);
+        RectTransform panelRT = panelObj.GetComponent<RectTransform>();
+        panelRT.anchorMin = Vector2.zero; panelRT.anchorMax = Vector2.one; panelRT.sizeDelta = Vector2.zero;
 
-        // 6. 시작 버튼 생성
-        CreateButton(panelObj.transform, "START GAME", openingSceneName, true);
+        // 4. 제목 생성
+        CreateText(panelObj.transform, gameTitle, 80);
 
-        // 7. 나가기 버튼 생성
-        CreateButton(panelObj.transform, "QUIT", "", false);
+        // 5. 버튼 생성 및 이벤트 영구 연결
+        CreateVRButton(panelObj.transform, "START GAME", "LoadOpeningScene");
+        CreateVRButton(panelObj.transform, "QUIT GAME", "QuitApplication");
 
-        Debug.Log("Title UI가 성공적으로 생성되었습니다. 이제 씬을 저장하세요!");
+        Debug.Log("VR 전용 Title UI 생성 완료! EventSystem에 XR UI Input Module이 있는지 확인하세요.");
     }
 
     void CreateText(Transform parent, string content, int fontSize)
@@ -85,55 +84,51 @@ public class TitleSceneGenerator : MonoBehaviour
         text.text = content;
         text.fontSize = fontSize;
         text.alignment = TextAlignmentOptions.Center;
-        text.rectTransform.sizeDelta = new Vector2(500, 150);
+        text.rectTransform.sizeDelta = new Vector2(550, 200);
     }
 
-    void CreateButton(Transform parent, string label, string sceneName, bool isStartButton)
+    void CreateVRButton(Transform parent, string label, string methodName)
     {
-        GameObject btnObj = new GameObject(label + "_Button");
+        GameObject btnObj = new GameObject(label + "_Btn");
         btnObj.transform.SetParent(parent, false);
-
-        Image btnImage = btnObj.AddComponent<Image>();
-        btnImage.color = buttonColor;
-
+        btnObj.AddComponent<Image>();
         Button btn = btnObj.AddComponent<Button>();
+        btnObj.GetComponent<RectTransform>().sizeDelta = buttonSize;
 
-        // 버튼 텍스트
+        // 텍스트 생성
         GameObject txtObj = new GameObject("Text");
         txtObj.transform.SetParent(btnObj.transform, false);
         TextMeshProUGUI btnTxt = txtObj.AddComponent<TextMeshProUGUI>();
         btnTxt.text = label;
         btnTxt.color = Color.black;
-        btnTxt.fontSize = 32;
         btnTxt.alignment = TextAlignmentOptions.Center;
-        btnTxt.rectTransform.anchorMin = Vector2.zero;
-        btnTxt.rectTransform.anchorMax = Vector2.one;
-        btnTxt.rectTransform.sizeDelta = Vector2.zero;
+        btnTxt.rectTransform.anchorMin = Vector2.zero; btnTxt.rectTransform.anchorMax = Vector2.one; btnTxt.rectTransform.sizeDelta = Vector2.zero;
 
-        btnObj.GetComponent<RectTransform>().sizeDelta = buttonSize;
+        // 이벤트 처리기 부착
+        TitleActionHandler handler = btnObj.AddComponent<TitleActionHandler>();
+        handler.targetScene = openingSceneName;
 
-        // 중요: 씬에 영구 보관되는 버튼에 이벤트를 할당하려면 
-        // 별도의 헬퍼 스크립트를 붙이거나 가벼운 컴포넌트를 연결하는 것이 좋습니다.
-        TitleButtonHandler handler = btnObj.AddComponent<TitleButtonHandler>();
-        if (isStartButton)
-        {
-            handler.targetScene = sceneName;
-            btn.onClick.AddListener(handler.LoadScene);
-        }
-        else
-        {
-            btn.onClick.AddListener(handler.QuitGame);
-        }
+#if UNITY_EDITOR
+        // 에디터에서 이벤트를 '영구적(Persistent)'으로 기록하여 씬 저장 시 유지되게 함
+        UnityEventTools.AddPersistentListener(btn.onClick, (UnityEngine.Events.UnityAction)System.Delegate.CreateDelegate(typeof(UnityEngine.Events.UnityAction), handler, methodName));
+#endif
     }
 }
 
-// 버튼 클릭 이벤트를 저장하기 위한 작은 클래스
-public class TitleButtonHandler : MonoBehaviour
+// 런타임 작동을 보장하는 별도 핸들러
+public class TitleActionHandler : MonoBehaviour
 {
     public string targetScene;
-    public void LoadScene() => SceneManager.LoadScene(targetScene);
-    public void QuitGame()
+
+    public void LoadOpeningScene()
     {
+        Debug.Log("씬 전환 시작: " + targetScene);
+        SceneManager.LoadScene(targetScene);
+    }
+
+    public void QuitApplication()
+    {
+        Debug.Log("게임 종료");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -142,28 +137,16 @@ public class TitleButtonHandler : MonoBehaviour
     }
 }
 
-// 인스펙터에 실제 버튼을 표시해주는 에디터 스크립트
 #if UNITY_EDITOR
-[CustomEditor(typeof(TitleSceneGenerator))]
+[CustomEditor(typeof(titlemanager))]
 public class TitleGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI(); // 기존 변수들 표시
-
-        TitleSceneGenerator generator = (TitleSceneGenerator)target;
-
+        base.OnInspectorGUI();
+        titlemanager gen = (titlemanager)target;
         GUILayout.Space(20);
-        if (GUILayout.Button("Generate Title UI", GUILayout.Height(40)))
-        {
-            generator.GenerateTitleUI();
-        }
-        
-        if (GUILayout.Button("Clear Generated UI"))
-        {
-            GameObject obj = GameObject.Find("TitleCanvas_Permanent");
-            if (obj != null) DestroyImmediate(obj);
-        }
+        if (GUILayout.Button("Generate VR Title UI", GUILayout.Height(40))) gen.GenerateTitleUI();
     }
 }
 #endif

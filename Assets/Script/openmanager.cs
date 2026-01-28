@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; // 이 줄을 추가하세요
 
 public class SimpleAdventureManager : MonoBehaviour
 {
@@ -183,6 +184,13 @@ public class SimpleAdventureManager : MonoBehaviour
         yield return ShowTalk(null, "Player", "What? Does that even make sense?");
         yield return ShowTalk(tent, "Deer", "A talking-deer makes sense, but that doesn't?");
         yield return ShowTalk(tent, "Deer", "Good Luck.\nBye.");
+        yield return StartCoroutine(FadeEffect(1f));
+        yield return new WaitForSeconds(1f); // 잠시 대기
+
+        // 2. 씬 전환
+        SceneManager.LoadScene("Main_Scene");
+
+        // --- 여기까지 ---
 
         isRunning = false;
     }
