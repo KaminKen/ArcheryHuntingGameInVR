@@ -534,5 +534,6 @@ public class EndingManager : MonoBehaviour
     public static void SetEndingResult(bool success)
     {
         GameSuccess = success;
+        Debug.Log($"[EndingManager] SetEndingResult called! Parameter: {success}, GameSuccess is now: {GameSuccess}");
     }
 }

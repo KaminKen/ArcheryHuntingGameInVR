@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Time phase enumeration for the three stages of gameplay
@@ -289,6 +290,10 @@ public class GameManager : MonoBehaviour
 
         // Invoke win event
         onWin?.Invoke();
+
+        // Set ending result and load ending scene
+        EndingManager.SetEndingResult(true);
+        SceneManager.LoadScene("ending");
     }
 
     /// <summary>
@@ -303,6 +308,10 @@ public class GameManager : MonoBehaviour
 
         // Invoke lose event
         onLose?.Invoke();
+
+        // Set ending result and load ending scene
+        EndingManager.SetEndingResult(false);
+        SceneManager.LoadScene("ending");
     }
 
     /// <summary>
