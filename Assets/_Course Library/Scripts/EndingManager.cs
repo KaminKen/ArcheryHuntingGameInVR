@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem;
 
 public class EndingManager : MonoBehaviour
 {
@@ -26,11 +25,9 @@ public class EndingManager : MonoBehaviour
     public float minDisplayTime = 2.0f;
     public float maxDisplayTime = 5.0f;
 
-    [Header("Button Settings")]
-    public Vector2 buttonSize = new Vector2(300, 80);
-    public int buttonFontSize = 28;
-    public Color buttonColor = new Color(0.2f, 0.6f, 0.9f, 1f);
-    public Color buttonHoverColor = new Color(0.3f, 0.7f, 1f, 1f);
+    [Header("Auto-Return Settings")]
+    [Tooltip("Time in seconds before automatically returning to opening scene")]
+    [Range(1f, 30f)] public float autoReturnDelay = 5.0f;
 
     [Header("VR Canvas Distance Settings")]
     [Tooltip("Distance from camera for UI elements in meters")]
@@ -50,12 +47,11 @@ public class EndingManager : MonoBehaviour
     private GameObject blackScreen;
     private GameObject worldCanvas;
     private GameObject screenCanvas;
-    private GameObject buttonCanvas;
-    private GameObject youDiedCanvas;
+    private GameObject countdownCanvas;
     private Text worldText;
     private Text screenText;
     private Text youDiedText;
-    private Button returnButton;
+    private Text countdownText;
     
     // State management
     private bool isRunning = false;
@@ -102,7 +98,6 @@ public class EndingManager : MonoBehaviour
         // Ensure only one test option is selected at a time
         if (testSuccessEnding && testFailureEnding)
         {
-            // If both are checked, uncheck the other one based on which was just checked
             testFailureEnding = false;
         }
 
@@ -140,13 +135,6 @@ public class EndingManager : MonoBehaviour
                 );
             }
         }
-
-        // VR Controller button input to return to opening scene
-        // This works when button canvas is active (ending sequence finished)
-        if (buttonCanvas != null && buttonCanvas.activeSelf)
-        {
-            CheckVRControllerInput();
-        }
     }
 
     void UpdateUIPositions()
@@ -164,10 +152,10 @@ public class EndingManager : MonoBehaviour
         }
 
         // Update "YOU DIED" text position
-        if (youDiedCanvas != null && youDiedCanvas.activeSelf)
+        if (countdownCanvas != null && countdownCanvas.activeSelf)
         {
-            youDiedCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
-            youDiedCanvas.transform.rotation = Quaternion.LookRotation(youDiedCanvas.transform.position - camTransform.position);
+            countdownCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
+            countdownCanvas.transform.rotation = Quaternion.LookRotation(countdownCanvas.transform.position - camTransform.position);
         }
 
         // Update screen subtitle position (player dialogue)
@@ -176,76 +164,10 @@ public class EndingManager : MonoBehaviour
             screenCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
             screenCanvas.transform.rotation = Quaternion.LookRotation(screenCanvas.transform.position - camTransform.position);
         }
-
-        // Update button canvas position
-        if (buttonCanvas != null && buttonCanvas.activeSelf)
-        {
-            buttonCanvas.transform.position = camTransform.position + camTransform.forward * uiDistance;
-            buttonCanvas.transform.rotation = Quaternion.LookRotation(buttonCanvas.transform.position - camTransform.position);
-        }
-    }
-
-    void CheckVRControllerInput()
-    {
-        // Using new Input System for VR controller buttons
-        bool returnPressed = false;
-
-        // Get current gamepad (VR controllers are detected as gamepads)
-        Gamepad gamepad = Gamepad.current;
-        
-        if (gamepad != null)
-        {
-            // Check face buttons (A, B, X, Y)
-            if (gamepad.buttonSouth.wasPressedThisFrame ||  // A button
-                gamepad.buttonEast.wasPressedThisFrame ||   // B button
-                gamepad.buttonWest.wasPressedThisFrame ||   // X button
-                gamepad.buttonNorth.wasPressedThisFrame)    // Y button
-            {
-                returnPressed = true;
-                Debug.Log("[EndingManager] VR controller face button pressed (A/B/X/Y)");
-            }
-
-            // Check triggers and shoulders as fallback
-            if (gamepad.leftTrigger.wasPressedThisFrame ||
-                gamepad.rightTrigger.wasPressedThisFrame ||
-                gamepad.leftShoulder.wasPressedThisFrame ||
-                gamepad.rightShoulder.wasPressedThisFrame)
-            {
-                returnPressed = true;
-                Debug.Log("[EndingManager] VR controller trigger/shoulder pressed");
-            }
-        }
-
-        // Fallback: Check keyboard for testing in editor
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null)
-        {
-            if (keyboard.anyKey.wasPressedThisFrame)
-            {
-                returnPressed = true;
-                Debug.Log("[EndingManager] Keyboard pressed (editor testing)");
-            }
-        }
-
-        // Return to opening scene if any button was pressed
-        if (returnPressed)
-        {
-            ReturnToOpening();
-        }
     }
 
     void CreateUIElements()
     {
-        // Ensure there's an EventSystem for button interaction (VR compatible)
-        if (UnityEngine.EventSystems.EventSystem.current == null)
-        {
-            GameObject eventSystemObj = new GameObject("EventSystem");
-            eventSystemObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            UnityEngine.EventSystems.StandaloneInputModule inputModule = eventSystemObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-            
-            Debug.Log("[EndingManager] Created EventSystem for UI interaction");
-        }
-
         // Get default font
         Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (defaultFont == null) defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -253,17 +175,14 @@ public class EndingManager : MonoBehaviour
         // Create black screen for fade effects (WorldSpace Canvas for VR)
         CreateBlackScreen(defaultFont);
 
-        // Create "YOU DIED" text canvas (WorldSpace for VR)
-        CreateYouDiedCanvas(defaultFont);
+        // Create countdown canvas with "YOU DIED" or countdown text (WorldSpace for VR)
+        CreateCountdownCanvas(defaultFont);
 
         // Create screen subtitle for player dialogue (WorldSpace for VR)
         CreateScreenSubtitleCanvas(defaultFont);
 
-        // Create world space subtitle for deer dialogue (already WorldSpace)
+        // Create world space subtitle for deer dialogue
         CreateWorldSubtitleCanvas(defaultFont);
-
-        // Create button canvas for return to title button (WorldSpace for VR)
-        CreateButtonCanvas(defaultFont);
     }
 
     void CreateBlackScreen(Font font)
@@ -277,10 +196,6 @@ public class EndingManager : MonoBehaviour
         RectTransform canvasRect = blackScreen.GetComponent<RectTransform>();
         canvasRect.sizeDelta = new Vector2(100, 100); // Large enough to cover view
         blackScreen.transform.localScale = Vector3.one * 0.02f; // Scale to appropriate size in world space
-        
-        // Add GraphicRaycaster (not needed for black screen but good practice)
-        GraphicRaycaster raycaster = blackScreen.AddComponent<GraphicRaycaster>();
-        raycaster.ignoreReversedGraphics = true;
 
         // Create black image
         GameObject blackObj = new GameObject("BlackImage");
@@ -293,26 +208,23 @@ public class EndingManager : MonoBehaviour
         Debug.Log("[EndingManager] Created WorldSpace black screen for VR");
     }
 
-    void CreateYouDiedCanvas(Font font)
+    void CreateCountdownCanvas(Font font)
     {
-        // Create "YOU DIED" text as WorldSpace canvas for VR
-        youDiedCanvas = new GameObject("YouDiedCanvas");
-        Canvas canvas = youDiedCanvas.AddComponent<Canvas>();
+        // Create countdown canvas with "YOU DIED" text and countdown (WorldSpace for VR)
+        countdownCanvas = new GameObject("CountdownCanvas");
+        Canvas canvas = countdownCanvas.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.sortingOrder = 100;
         
         // Set canvas size and scale
-        RectTransform canvasRect = youDiedCanvas.GetComponent<RectTransform>();
-        canvasRect.sizeDelta = new Vector2(800, 200);
-        youDiedCanvas.transform.localScale = Vector3.one * 0.002f; // Smaller scale for text readability
-        
-        // Add GraphicRaycaster
-        GraphicRaycaster raycaster = youDiedCanvas.AddComponent<GraphicRaycaster>();
+        RectTransform canvasRect = countdownCanvas.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(800, 300);
+        countdownCanvas.transform.localScale = Vector3.one * 0.002f; // Smaller scale for text readability
 
         // Create "YOU DIED" text
-        GameObject textObj = new GameObject("YouDiedText");
-        textObj.transform.SetParent(youDiedCanvas.transform, false);
-        youDiedText = textObj.AddComponent<Text>();
+        GameObject youDiedObj = new GameObject("YouDiedText");
+        youDiedObj.transform.SetParent(countdownCanvas.transform, false);
+        youDiedText = youDiedObj.AddComponent<Text>();
         youDiedText.font = font;
         youDiedText.text = "YOU DIED";
         youDiedText.fontSize = 80;
@@ -320,15 +232,32 @@ public class EndingManager : MonoBehaviour
         youDiedText.color = new Color(0.8f, 0.1f, 0.1f, 1f); // Dark red
         youDiedText.fontStyle = FontStyle.Bold;
         
-        RectTransform textRect = youDiedText.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0.5f, 0.5f);
-        textRect.anchorMax = new Vector2(0.5f, 0.5f);
-        textRect.sizeDelta = new Vector2(800, 150);
-        textRect.anchoredPosition = Vector2.zero;
-        
-        youDiedCanvas.SetActive(false);
+        RectTransform youDiedRect = youDiedText.GetComponent<RectTransform>();
+        youDiedRect.anchorMin = new Vector2(0.5f, 0.5f);
+        youDiedRect.anchorMax = new Vector2(0.5f, 0.5f);
+        youDiedRect.sizeDelta = new Vector2(800, 150);
+        youDiedRect.anchoredPosition = new Vector2(0, 30); // Slightly above center
 
-        Debug.Log("[EndingManager] Created WorldSpace 'YOU DIED' canvas for VR");
+        // Create countdown text
+        GameObject countdownObj = new GameObject("CountdownText");
+        countdownObj.transform.SetParent(countdownCanvas.transform, false);
+        countdownText = countdownObj.AddComponent<Text>();
+        countdownText.font = font;
+        countdownText.text = "Returning in 5...";
+        countdownText.fontSize = 32;
+        countdownText.alignment = TextAnchor.MiddleCenter;
+        countdownText.color = new Color(0.9f, 0.9f, 0.9f, 1f); // Light gray
+        countdownText.fontStyle = FontStyle.Normal;
+        
+        RectTransform countdownRect = countdownText.GetComponent<RectTransform>();
+        countdownRect.anchorMin = new Vector2(0.5f, 0.5f);
+        countdownRect.anchorMax = new Vector2(0.5f, 0.5f);
+        countdownRect.sizeDelta = new Vector2(600, 80);
+        countdownRect.anchoredPosition = new Vector2(0, -80); // Below "YOU DIED"
+        
+        countdownCanvas.SetActive(false);
+
+        Debug.Log("[EndingManager] Created WorldSpace countdown canvas for VR");
     }
 
     void CreateScreenSubtitleCanvas(Font font)
@@ -343,9 +272,6 @@ public class EndingManager : MonoBehaviour
         RectTransform canvasRect = screenCanvas.GetComponent<RectTransform>();
         canvasRect.sizeDelta = screenBubbleSize;
         screenCanvas.transform.localScale = Vector3.one * 0.002f;
-        
-        // Add GraphicRaycaster
-        GraphicRaycaster raycaster = screenCanvas.AddComponent<GraphicRaycaster>();
 
         // Create background
         Image subBg = screenCanvas.AddComponent<Image>();
@@ -361,7 +287,7 @@ public class EndingManager : MonoBehaviour
 
     void CreateWorldSubtitleCanvas(Font font)
     {
-        // Create world space subtitle for deer dialogue (already WorldSpace, just keep it)
+        // Create world space subtitle for deer dialogue
         worldCanvas = new GameObject("WorldSubtitleCanvas");
         Canvas wCanvas = worldCanvas.AddComponent<Canvas>();
         wCanvas.renderMode = RenderMode.WorldSpace;
@@ -371,41 +297,12 @@ public class EndingManager : MonoBehaviour
         wRect.sizeDelta = worldBubbleSize;
         worldCanvas.transform.localScale = Vector3.one * 0.01f;
         
-        // Add GraphicRaycaster
-        GraphicRaycaster raycaster = worldCanvas.AddComponent<GraphicRaycaster>();
-        
         Image wBg = worldCanvas.AddComponent<Image>();
         wBg.color = new Color(0, 0, 0, 0.85f);
         worldText = CreateTextComponent(worldCanvas.transform, font, worldFontSize);
         worldCanvas.SetActive(false);
 
         Debug.Log("[EndingManager] Created WorldSpace world subtitle canvas for VR");
-    }
-
-    void CreateButtonCanvas(Font font)
-    {
-        // Create button canvas as WorldSpace for VR compatibility
-        buttonCanvas = new GameObject("ButtonCanvas");
-        Canvas canvas = buttonCanvas.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvas.sortingOrder = 100;
-        
-        // Set canvas size and scale
-        RectTransform canvasRect = buttonCanvas.GetComponent<RectTransform>();
-        canvasRect.sizeDelta = new Vector2(400, 300);
-        buttonCanvas.transform.localScale = Vector3.one * 0.002f;
-        
-        // Add GraphicRaycaster for VR pointer interaction
-        GraphicRaycaster raycaster = buttonCanvas.AddComponent<GraphicRaycaster>();
-        raycaster.ignoreReversedGraphics = true;
-        raycaster.blockingObjects = GraphicRaycaster.BlockingObjects.None;
-
-        // Create return button
-        CreateReturnButton(buttonCanvas.transform, font);
-        
-        buttonCanvas.SetActive(false);
-
-        Debug.Log("[EndingManager] Created WorldSpace button canvas for VR");
     }
 
     Text CreateTextComponent(Transform parent, Font font, int fontSize)
@@ -426,69 +323,6 @@ public class EndingManager : MonoBehaviour
         rt.offsetMin = new Vector2(20, 15);
         rt.offsetMax = new Vector2(-20, -15);
         return t;
-    }
-
-    void CreateReturnButton(Transform parent, Font font)
-    {
-        GameObject buttonObj = new GameObject("ReturnButton");
-        buttonObj.transform.SetParent(parent, false);
-        
-        // Set button position and size (centered for VR interaction)
-        RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
-        buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
-        buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
-        buttonRect.sizeDelta = buttonSize;
-        buttonRect.anchoredPosition = Vector2.zero; // Center in canvas
-
-        // Add button component
-        returnButton = buttonObj.AddComponent<Button>();
-        Image buttonImg = buttonObj.AddComponent<Image>();
-        buttonImg.color = buttonColor;
-        buttonImg.raycastTarget = true; // Ensure button can receive VR pointer events
-
-        // Add outline for better visibility in VR
-        Outline outline = buttonObj.AddComponent<Outline>();
-        outline.effectColor = Color.white;
-        outline.effectDistance = new Vector2(2, 2);
-
-        // Create button text
-        GameObject textObj = new GameObject("ButtonText");
-        textObj.transform.SetParent(buttonObj.transform, false);
-        Text buttonText = textObj.AddComponent<Text>();
-        buttonText.font = font;
-        buttonText.text = "Return to Opening\n<size=18>(Press A/B/X/Y on controller)</size>";
-        buttonText.fontSize = buttonFontSize;
-        buttonText.alignment = TextAnchor.MiddleCenter;
-        buttonText.color = Color.white;
-        buttonText.fontStyle = FontStyle.Bold;
-        buttonText.raycastTarget = false; // Text shouldn't block button clicks
-        
-        RectTransform textRect = textObj.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-
-        // Enhanced button colors for better VR feedback
-        ColorBlock colors = returnButton.colors;
-        colors.normalColor = buttonColor;
-        colors.highlightedColor = buttonHoverColor;
-        colors.pressedColor = new Color(0.1f, 0.4f, 0.7f, 1f);
-        colors.selectedColor = buttonHoverColor;
-        colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        colors.colorMultiplier = 1f;
-        colors.fadeDuration = 0.1f;
-        returnButton.colors = colors;
-
-        // Add navigation for VR controller support
-        Navigation nav = new Navigation();
-        nav.mode = Navigation.Mode.None; // Only one button, no navigation needed
-        returnButton.navigation = nav;
-
-        // Add click event (works with VR pointer/raycast interaction)
-        returnButton.onClick.AddListener(ReturnToOpening);
-        
-        Debug.Log("[EndingManager] Return button created - Press A/B/X/Y on VR controller or point and click");
     }
 
     void SetStretch(RectTransform rt)
@@ -514,9 +348,11 @@ public class EndingManager : MonoBehaviour
             yield return StartCoroutine(PlayFailureEnding());
         }
 
-        // Show return button after ending
-        buttonCanvas.SetActive(true);
-        isRunning = false;
+        // Start countdown timer after ending
+        yield return StartCoroutine(CountdownTimer());
+
+        // Return to opening scene
+        ReturnToOpening();
     }
 
     IEnumerator PlaySuccessEnding()
@@ -544,7 +380,7 @@ public class EndingManager : MonoBehaviour
         // Show deer's dialogue
         yield return ShowTalk(deer, "Deer", "Impressive, hope you can have this luck next time");
 
-        // Wait before showing button
+        // Wait before showing countdown
         yield return new WaitForSeconds(1.0f);
     }
 
@@ -553,11 +389,12 @@ public class EndingManager : MonoBehaviour
         // Screen is already black
         yield return new WaitForSeconds(0.5f);
 
-        // Show "YOU DIED" text
-        youDiedCanvas.SetActive(true);
+        // Show countdown canvas with "YOU DIED" text
+        countdownCanvas.SetActive(true);
+        youDiedText.gameObject.SetActive(true);
+        countdownText.gameObject.SetActive(false); // Hide countdown text initially
         
         // Fade in "YOU DIED" text
-        Text youDiedComponent = youDiedText;
         float elapsed = 0f;
         float fadeDuration = 1.5f;
         Color startColor = new Color(0.8f, 0.1f, 0.1f, 0f);
@@ -566,25 +403,52 @@ public class EndingManager : MonoBehaviour
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
-            youDiedComponent.color = Color.Lerp(startColor, endColor, elapsed / fadeDuration);
+            youDiedText.color = Color.Lerp(startColor, endColor, elapsed / fadeDuration);
             yield return null;
         }
 
         // Display "YOU DIED" for a while
         yield return new WaitForSeconds(2.0f);
 
-        // Fade out "YOU DIED"
+        // Fade out "YOU DIED" slightly (but keep visible)
         elapsed = 0f;
-        while (elapsed < fadeDuration)
+        Color midColor = new Color(0.8f, 0.1f, 0.1f, 0.7f);
+        while (elapsed < 0.5f)
         {
             elapsed += Time.deltaTime;
-            youDiedComponent.color = Color.Lerp(endColor, startColor, elapsed / fadeDuration);
+            youDiedText.color = Color.Lerp(endColor, midColor, elapsed / 0.5f);
             yield return null;
         }
 
-        youDiedCanvas.SetActive(false);
+        // Wait before showing countdown
+        yield return new WaitForSeconds(0.5f);
+    }
 
-        // Wait before showing button
+    IEnumerator CountdownTimer()
+    {
+        // Show countdown text
+        countdownText.gameObject.SetActive(true);
+        countdownCanvas.SetActive(true);
+
+        // For success ending, show the countdown canvas
+        if (isSuccess && youDiedText != null)
+        {
+            youDiedText.gameObject.SetActive(false); // Hide "YOU DIED" for success ending
+        }
+
+        float timeRemaining = autoReturnDelay;
+        
+        while (timeRemaining > 0)
+        {
+            // Update countdown text
+            int seconds = Mathf.CeilToInt(timeRemaining);
+            countdownText.text = $"Returning to opening in {seconds}...";
+            
+            yield return new WaitForSeconds(1.0f);
+            timeRemaining -= 1.0f;
+        }
+
+        countdownText.text = "Returning...";
         yield return new WaitForSeconds(0.5f);
     }
 
@@ -662,12 +526,6 @@ public class EndingManager : MonoBehaviour
         
         // Load opening scene
         SceneManager.LoadScene("opening");
-    }
-
-    // Legacy method name for UI button compatibility (if needed)
-    void ReturnToTitle()
-    {
-        ReturnToOpening();
     }
 
     // Method to be called from previous scene's manager
