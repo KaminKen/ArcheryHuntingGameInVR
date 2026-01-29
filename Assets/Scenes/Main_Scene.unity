@@ -124899,7 +124899,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 21787061385360160, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.1
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 21787061385360160, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_LocalScale.y
@@ -124918,6 +124918,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 748319365628623340, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_MovementType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 748319365628623340, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_TrackRotation
       value: 0
       objectReference: {fileID: 0}
@@ -124925,6 +124929,14 @@ PrefabInstance:
       propertyPath: m_InteractionManager
       value: 
       objectReference: {fileID: 1426716522}
+    - target: {fileID: 2060226458121850709, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_TrackScale
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2060226458121850709, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_TrackRotation
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2486750465080123036, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_Name
       value: Bow_Evil_FBX
@@ -124988,6 +125000,14 @@ PrefabInstance:
     - target: {fileID: 4981428439261869746, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5180009100158969118, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_Constraints
+      value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956256469558179971, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_UseGravity
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7956256469558179971, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_Constraints
@@ -276340,7 +276360,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: -0.55}
+  m_AnchoredPosition: {x: 0, y: -0.35}
   m_SizeDelta: {x: 1200, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &875553342
