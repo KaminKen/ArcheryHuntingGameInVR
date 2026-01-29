@@ -66,8 +66,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Spawner Difficulty By Phase")]
     [SerializeField] private float daySpawnInterval = 3f;
-    [SerializeField] private float nightSpawnInterval = 2f;
-    [SerializeField] private float dawnSpawnInterval = 1.2f;
+    [SerializeField] private float nightSpawnInterval = 2.2f;
+    [SerializeField] private float dawnSpawnInterval = 1.8f;
 
     [SerializeField] private float daySpawnAngle = 180f;
     [SerializeField] private float nightSpawnAngle = 180f;
