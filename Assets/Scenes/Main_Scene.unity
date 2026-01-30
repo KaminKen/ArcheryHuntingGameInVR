@@ -125002,8 +125002,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5180009100158969118, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_UseGravity
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5180009100158969118, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_Constraints
       value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 5180009100158969118, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7956256469558179971, guid: a401fc6b78eea454199e7f739809afdb, type: 3}
       propertyPath: m_UseGravity
